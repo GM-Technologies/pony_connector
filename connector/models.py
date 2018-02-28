@@ -8,6 +8,7 @@ from connector import base_models
 class ProductCategory(base_models.AuditModel):
     code = models.IntegerField(primary_key=True, db_column='GRPCODE')
     name = models.CharField(max_length=55, db_column='GRPNAME')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.name
@@ -22,6 +23,7 @@ class ProductSubCategory(base_models.AuditModel):
     code = models.IntegerField(db_column='SUBGRP')
     category = models.ForeignKey(ProductCategory, db_column='GRPCODE')
     description = models.CharField(max_length=55, db_column='SGRPDESC')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.description
@@ -36,6 +38,7 @@ class TariffHeader(base_models.AuditModel):
     category = models.OneToOneField(ProductCategory, primary_key=True, db_column='GRPCODE')
     name = models.CharField(max_length=150, db_column='GRPNAME')
     type = models.CharField(max_length=2, db_column='GRPTYPE')
+    is_sync = models.BoolenField(default=False)
 
     class Meta:
         verbose_name_plural = "Tariff Header"
@@ -48,6 +51,7 @@ class TariffMaster(base_models.AuditModel):
     description = models.CharField(max_length=80, db_column='TARIFF_DES')
     hsn_code = models.CharField(max_length=8, db_column='HSNCODE')
     gst = models.DecimalField(max_length=5, decimal_places=2, db_column='GSTPER')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.tariff_id
@@ -67,6 +71,7 @@ class ProductMaster(base_models.AuditModel):
     category = models.ForeignKey(ProductCategory, db_column='GRPCODE')
     sub_category = models.ForeignKey(ProductSubCategory, db_column='SUBGRP')
     tariff = models.ForeignKey(TariffMaster, db_column='TARIFFID')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.product_code
@@ -82,6 +87,7 @@ class Price(base_models.AuditModel):
     with_effect_from = models.DateField(db_column='WEFDATE')
     product_code = models.ForeignKey(ProductMaster, db_column='PRODCODE')
     price = models.IntegerField(db_column='PRODCNT')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.product_code
@@ -96,6 +102,7 @@ class User(base_models.AuditModel):
     user_id = models.IntegerField(db_column='USERID')
     user_name = models.CharField(max_length=40, db_column='USERNAME')
     dept_code = models.IntegerField(db_column='DEPTCODE')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.user_id
@@ -115,6 +122,7 @@ class DivisionMaster(base_models.AuditModel):
     division_phonenumber = models.CharField(max_length=10, db_column='DIVNPHNO')
     division_fax = models.CharField(max_length=60, db_column='DIVNFAX')
     division_mail = models.CharField(max_length=25, db_column='DIVNMAIL')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.division_code
@@ -139,6 +147,7 @@ class DepoMaster(base_models.AuditModel):
     gst_registered_date = models.DateField(db_column='GSTREGDT')
     price_code = models.IntegerField(max_length=4, db_column='PRICECOD')
     gstin = models.CharField(max_length=15, db_column='GSTIN')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.depo_code
@@ -154,6 +163,7 @@ class Market(base_models.AuditModel):
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     market_name = models.CharField(max_length=25, db_column='MKTNAME')
     price_code = models.IntegerField(max_length=4, db_column='PRICECOD')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return "{} - {}".format(self.market_code, self.depo_code)
@@ -188,6 +198,7 @@ class CustomerMaster(base_models.AuditModel):
     customer_id = models.IntegerField(max_length=12, db_column='CUSTID')
     pan = models.CharField(max_length=15, db_column='PAN')
     gstin = models.CharField(max_length=15, db_column='GSTIN')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return "{} - {}".format(self.market_code, self.depo_code)
@@ -212,6 +223,7 @@ class OrderHeader(base_models.AuditModel):
     discount = models.IntegerField(max_length=12, db_column='DISCTOT')
     order_value_rs = models.IntegerField(max_length=12, db_column='ORDVALRS')
     shipped_date = models.DateField(db_column='SHIPDT')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.order_number
@@ -238,6 +250,7 @@ class OrderDetails(base_models.AuditModel):
     amount = models.IntegerField(max_length=12, db_column='AMOUNT')
     order_created_date = models.DateField(db_column='CRETDATE')
     order_detail_id = models.IntegerField(max_length=12, db_column='OPDTLID')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.order_number
@@ -261,6 +274,7 @@ class StockMaster(base_models.AuditModel):
     all_quantity = models.IntegerField(max_length=13, db_column='ALLQTY')
     clear_stock = models.IntegerField(max_length=13, db_column='CLSTK')
     free_stock = models.IntegerField(max_length=23, db_column='FREESTOCK')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return "{} - {} - {}".format(self.product_code, self.month, self.depo_code)
@@ -305,6 +319,7 @@ class InvoiceHeader(base_models.AuditModel):
     total_sgst_amount = models.IntegerField(max_length=14, db_column='TOT_SGSTAMT')
     total_igst_amount = models.IntegerField(max_length=14, db_column='TOT_IGSTAMT')
     invoice_gstin = models.CharField(max_length=15, db_column='INV_GSTIN')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
         return self.invoice_number
@@ -337,10 +352,87 @@ class InvoiceDetails(base_models.AuditModel):
     igst_amount = models.IntegerField(max_length=16, db_column='IGSTAMT')
     item_type = models.CharField(max_length=1, db_column='ITEMTYPE')
     tarrifid = models.ForeignKey(TariffMaster, db_column='TARIFFID')
+    is_sync = models.BoolenField(default=False)
 
     def __str__(self):
-        return self.invoice_number
+        return self.invoice_header.invoice_number
 
     class Meta:
         verbose_name_plural = "Invoice Details"
         db_table = "GCP_ST17_INV_DTL"
+
+
+class CollectionHeader(base_models.AuditModel):
+    id = models.IntegerField(primary_key=True, db_column='ID')
+    depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
+    rmasid = models.IntegerField(max_length=20, db_column='RMASID')
+    sl_no = models.IntegerField(max_length=15, db_column='SLNO')
+    receipt_number = models.IntegerField(max_length=14, db_column='RECPTNO')
+    receipt_date = models.DateField(db_column='RECPTDT')
+    m_receipt_number = models.IntegerField(max_length=9, db_column='MRECPTNO')
+    m_receipt_date = models.DateField(db_column='MRECPTDT')
+    voucher_type = models.CharField(max_length=3, db_column='VOUTYPE')
+    customer_code = models.IntegerField(max_length=6, db_column='CUSCODE')
+    pay_code = models.IntegerField(max_length=1, db_column='PAYCODE')
+    doc_number = models.CharField(max_length=10, db_column='DOCNO')
+    doc_date = models.DateField(db_column='DOCDT')
+    bank_name = models.CharField(max_length=25, db_column='BANKNAME')
+    br_name = models.CharField(max_length=15, db_column='BRNAME')
+    received_amount = models.IntegerField(max_length=19, db_column='RECDAMT')
+    advance_code = models.IntegerField(max_length=6, db_column='ADVCODE')
+    advance_amount = models.IntegerField(max_length=19, db_column='ADVAMT')
+    bgl_code = models.IntegerField(max_length=6, db_column='BGLCODE')
+    bcgs_code = models.IntegerField(max_length=6, db_column='BCGSCODE')
+    bint_code = models.IntegerField(max_length=6, db_column='BINTCODE')
+    deposit_flag = models.IntegerField(max_length=4, db_column='DEPOSITFLAG')
+    bonus_flag = models.IntegerField(max_length=4, db_column='BOUNSFLAG')
+    round_plus = models.IntegerField(max_length=19, db_column='ROUNDPLUS')
+    round_minus = models.IntegerField(max_length=19, db_column='ROUNDMINUS')
+    c_flag = models.IntegerField(max_length=2, db_column='CFLAG')
+    cash_receipt_number = models.IntegerField(max_length=9, db_column='CASH_RECEIPTNO')
+    cash_receipt_date = models.DateField(db_column='CASH_RECEIPTDT')
+    remarks = models.CharField(max_length=45, db_column='REMARKS')
+    dis_receipt_number = models.IntegerField(max_length=9, db_column='DIS_RECPTNO')
+    place_supply = models.CharField(max_length=30, db_column='PLACE_SUPPLY')
+    courier_charges = models.IntegerField(max_length=16, db_column='COUR_CHARG')
+    inter_state = models.CharField(max_length=1, db_column='INTER_STAT')
+    clearing_flag = models.CharField(max_length=1, db_column='CLEARING_FLAG')
+    is_sync = models.BoolenField(default=False)
+
+    def __str__(self):
+        return "{} - {}".format(self.receipt_number, self.depo_code)
+
+    class Meta:
+        verbose_name_plural = "Collection Header"
+        db_table = "GCP_FT71_RECEIPT_MAS "
+
+
+class CollectionDetails(base_models.AuditModel):
+    id = models.IntegerField(primary_key=True, db_column='ID')
+    depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
+    dtlid = models.IntegerField(max_length=20, db_column='DTLID')
+    rmasid = models.IntegerField(max_length=20, db_column='RMASID')
+    receipt_number = models.IntegerField(max_length=14, db_column='RECPTNO')
+    invoice_id = models.IntegerField(max_length=20, db_column='INVID')
+    gl_code = models.IntegerField(max_length=6, db_column='GLCODE')
+    bcgs = models.CharField(max_length=16, db_column='BCGS')
+    binit = models.IntegerField(max_length=16, db_column='BINT')
+    othamt = models.IntegerField(max_length=16, db_column='OTHAMT')
+    received_amount = models.IntegerField(max_length=19, db_column='RECDAMT')
+    invoice_code = models.ForeignKey(InvoiceHeader, db_column='INVNO')
+    tarif_id = models.ForeignKey(TariffMaster, db_column='TARIFFID')
+    cgst_per = models.IntegerField(max_length=7, db_column='CGSTPER')
+    cgst_amount = models.IntegerField(max_length=14, db_column='CGSTAMT')
+    sgst_per = models.IntegerField(max_length=7, db_column='SGSTPER')
+    sgst_amount = models.IntegerField(max_length=14, db_column='SGSTAMT')
+    igst_per = models.IntegerField(max_length=7, db_column='IGSTPER')
+    igst_amount = models.IntegerField(max_length=14, db_column='IGST')
+    total_tax_value = models.IntegerField(max_length=14, db_column='TAXABLE_VALUE')
+    is_sync = models.BoolenField(default=False)
+
+    def __str__(self):
+        return "{} - {}".format(self.receipt_number, self.depo_code)
+
+    class Meta:
+        verbose_name_plural = "Collection Details"
+        db_table = "GCP_FT72_RECEIPT_DTL"
