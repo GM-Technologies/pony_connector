@@ -50,7 +50,7 @@ class TariffMaster(base_models.AuditModel):
     tariff_head = models.CharField(max_length=10, db_column='TARIFFHD')
     description = models.CharField(max_length=80, db_column='TARIFF_DES')
     hsn_code = models.CharField(max_length=8, db_column='HSNCODE')
-    gst = models.DecimalField(max_length=5, decimal_places=2, db_column='GSTPER')
+    gst = models.DecimalField(max_digits=5, decimal_places=2, db_column='GSTPER')
     is_sync = models.BooleanField(default=False)
 
     def __str__(self):
