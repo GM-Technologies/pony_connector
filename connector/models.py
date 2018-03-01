@@ -118,8 +118,8 @@ class DivisionMaster(base_models.AuditModel):
     division_add1 = models.CharField(max_length=35, db_column='DIVNADD1')
     division_add2 = models.CharField(max_length=35, db_column='DIVNADD2')
     division_add3 = models.CharField(max_length=35, db_column='DIVNADD3')
-    division_pincode = models.CharField(max_length=35, db_column='DIVNPIN')
-    division_phonenumber = models.CharField(max_length=10, db_column='DIVNPHNO')
+    division_pincode = models.CharField(max_length=10, db_column='DIVNPIN')
+    division_phonenumber = models.CharField(max_length=60, db_column='DIVNPHNO')
     division_fax = models.CharField(max_length=60, db_column='DIVNFAX')
     division_mail = models.CharField(max_length=25, db_column='DIVNMAIL')
     is_sync = models.BooleanField(default=False)
@@ -129,7 +129,7 @@ class DivisionMaster(base_models.AuditModel):
 
     class Meta:
         verbose_name_plural = "Division Master"
-        db_table = "GCP_DIVNCODE"
+        db_table = "GCP_SM01_DIV"
 
 
 class DepoMaster(base_models.AuditModel):
@@ -281,7 +281,7 @@ class StockMaster(base_models.AuditModel):
 
     class Meta:
         verbose_name_plural = "Stock Master"
-        db_table = "GCP_ST06_ORD_DTL"
+        db_table = "GCP_WM01_STK_MAS"
         unique_together = ['product_code', 'month', 'depo_code',
                            'stock_flag', 'order_part_number', 'order_date']
 
@@ -306,8 +306,8 @@ class InvoiceHeader(base_models.AuditModel):
     total_product_value = models.IntegerField(db_column='TOT_PRODVAL')
     total_discount_value = models.IntegerField(db_column='TOT_DISCOUNT')
     total_tax_value = models.IntegerField(db_column='TOT_TAXABLE_VALUE')
-    net_amount = models.IntegerField(db_column='NETAMT')
     total_tax_amount = models.IntegerField(db_column='TOT_TAXAMT')
+    net_amount = models.IntegerField(db_column='NETAMT')
     advance_amount = models.IntegerField(db_column='ADVAMT')
     credit_amount = models.IntegerField(db_column='CRAMT')
     dr_amount = models.IntegerField(db_column='DRAMT')
@@ -396,7 +396,7 @@ class CollectionHeader(base_models.AuditModel):
     place_supply = models.CharField(max_length=30, db_column='PLACE_SUPPLY')
     courier_charges = models.IntegerField(db_column='COUR_CHARG')
     inter_state = models.CharField(max_length=1, db_column='INTER_STAT')
-    clearing_flag = models.CharField(max_length=1, db_column='CLEARING_FLAG')
+    clearing_flag = models.IntegerField(db_column='CLEARING_FLAG')
     is_sync = models.BooleanField(default=False)
 
     def __str__(self):
@@ -415,8 +415,8 @@ class CollectionDetails(base_models.AuditModel):
     receipt_number = models.IntegerField(db_column='RECPTNO')
     invoice_id = models.IntegerField(db_column='INVID')
     gl_code = models.IntegerField(db_column='GLCODE')
-    bcgs = models.CharField(max_length=16, db_column='BCGS')
-    binit = models.IntegerField(db_column='BINT')
+    bcgs = models.IntegerField(db_column='BCGS')
+    bint = models.IntegerField(db_column='BINT')
     othamt = models.IntegerField(db_column='OTHAMT')
     received_amount = models.IntegerField(db_column='RECDAMT')
     invoice_code = models.ForeignKey(InvoiceHeader, db_column='INVNO')
