@@ -86,7 +86,7 @@ class Migration(migrations.Migration):
                 ('is_sync', models.BooleanField(default=False)),
             ],
             options={
-                'db_table': 'GCP_FT71_RECEIPT_MAS ',
+                'db_table': 'GCP_FT71_RECEIPT_MAS',
                 'verbose_name_plural': 'Collection Header',
             },
         ),
