@@ -404,7 +404,7 @@ class CollectionHeader(base_models.AuditModel):
 
     class Meta:
         verbose_name_plural = "Collection Header"
-        db_table = "GCP_FT71_RECEIPT_MAS "
+        db_table = "GCP_FT71_RECEIPT_MAS"
 
 
 class CollectionDetails(base_models.AuditModel):
