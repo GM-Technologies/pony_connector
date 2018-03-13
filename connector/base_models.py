@@ -4,16 +4,17 @@ from django_tools.middlewares import ThreadLocal
 
 
 class AuditModel(models.Model):
-    created_date = models.DateTimeField(auto_now_add=True)
-    modified_date = models.DateTimeField(auto_now=True)
+    created_date = models.DateTimeField(auto_now_add=True, db_column='DJCREATEDDATE')
+    modified_date = models.DateTimeField(auto_now=True, db_column='DJMODIFIEDDATE')
     created_by = models.ForeignKey("auth.User",
                                    related_name="created_%(class)s_set",
                                    null=True,
-                                   blank=True)
+                                   blank=True, db_column='DJCREATEDBY')
     modified_by = models.ForeignKey("auth.User",
                                     related_name="modified_%(class)s_set",
                                     null=True,
-                                    blank=True)
+                                    blank=True, db_column='DJMODIFIEDBY')
+    is_sync = models.BooleanField(default=False, db_column="ISSYNC")
 
     class Meta:
         abstract = True
@@ -21,7 +22,7 @@ class AuditModel(models.Model):
     def save_audit_user(self):
         user = ThreadLocal.get_current_user()
         if user and user.is_authenticated():
-            if not self.id:
+            if self._state.adding:
                 self.created_by = user
             self.modified_by = user
 
