@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import datetime
 from django.db import models
 
 from connector import base_models
@@ -16,6 +17,12 @@ class ProductCategory(base_models.AuditModel):
         verbose_name_plural = "Product Categories"
         db_table = "GCP_SM23_PDT_GRP"
 
+    def to_json(self):
+        return {
+            "code": str(self.code),
+            "name": self.name
+        }
+
 
 class ProductSubCategory(base_models.AuditModel):
     id = models.IntegerField(primary_key=True, db_column='ID')
@@ -31,6 +38,14 @@ class ProductSubCategory(base_models.AuditModel):
         db_table = "GCP_SM25_PDT_SUG"
         unique_together = ['code', 'category']
 
+    def to_json(self):
+        return {
+            "id": str(self.id),
+            "code": str(self.code),
+            "category": self.category.to_json(),
+            "description": self.description
+        }
+
 
 class TariffHeader(base_models.AuditModel):
     category = models.OneToOneField(ProductCategory, primary_key=True, db_column='GRPCODE')
@@ -44,10 +59,17 @@ class TariffHeader(base_models.AuditModel):
         verbose_name_plural = "Tariff Header"
         db_table = "GCP_SM27_TARIFF_HDR"
 
+    def to_json(self):
+        return {
+            "category": self.category.to_json(),
+            "name": self.name,
+            "type": self.type
+        }
+
 
 class TariffMaster(base_models.AuditModel):
     tariff_id = models.IntegerField(primary_key=True, db_column='TARIFFID')
-    tariff_head = models.CharField(max_length=10, db_column='TARIFFHD')
+    tariff_header = models.ForeignKey(TariffHeader, db_column='TARIFFHD')
     description = models.CharField(max_length=80, db_column='TARIFF_DES')
     hsn_code = models.CharField(max_length=8, db_column='HSNCODE')
     gst = models.DecimalField(max_digits=5, decimal_places=2, db_column='GSTPER')
@@ -58,6 +80,15 @@ class TariffMaster(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Tariff Master"
         db_table = "GCP_SM27_TARIFF_MAS"
+
+    def to_json(self):
+        return {
+            "tariff_id": str(self.tariff_id),
+            "tariff_header": self.tariff_header.to_json(),
+            "description": self.description,
+            "hsn_code": self.hsn_code,
+            "gst": str(self.gst)
+        }
 
 
 class ProductMaster(base_models.AuditModel):
@@ -78,6 +109,23 @@ class ProductMaster(base_models.AuditModel):
         verbose_name_plural = "Product Master"
         db_table = "GCP_SM22_PDT"
 
+    def to_json(self, input_date=datetime.date.today()):
+        prices = self.price_set.filter(with_effect_from__lte=input_date)
+        current_price = prices.order_by('-with_effect_from')\
+            .first().to_json() if prices.exists() else {}
+        return {
+            "product_code": str(self.product_code),
+            "description": self.description,
+            "size": self.size,
+            "length": self.length,
+            "count": str(self.count),
+            "unit": self.unit,
+            "category": self.category.to_json(),
+            "sub_category": self.sub_category.to_json(),
+            "tariff": self.tariff.to_json(),
+            "price": current_price
+        }
+
 
 class Price(base_models.AuditModel):
     id = models.IntegerField(primary_key=True, db_column='ID')
@@ -93,6 +141,16 @@ class Price(base_models.AuditModel):
         verbose_name_plural = "Price"
         db_table = "GCP_SM62_PRI_DTL"
         unique_together = ['price_code', 'with_effect_from', 'product_code']
+
+    def to_json(self, with_product=False):
+        return {
+            "id": str(self.id),
+            "price_code": str(self.price_code),
+            "with_effect_from": str(self.with_effect_from),
+            "product": self.product_code.to_json() if
+            with_product else self.product_code.product_code,
+            "price": str(self.price)
+        }
 
 
 class User(base_models.AuditModel):

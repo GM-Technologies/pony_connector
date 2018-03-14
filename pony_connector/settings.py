@@ -75,17 +75,22 @@ WSGI_APPLICATION = 'pony_connector.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
+DB_NAME = os.environ.get('DB_NAME', 'xe')
+DB_USER = os.environ.get('DB_USER', 'pony')
+DB_HOST = os.environ.get('DB_HOST', 'localhost')
+DB_PORT = os.environ.get('DB_PORT', '1521')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.oracle',
-        'NAME': 'sales',
-        'USER': 'gladmine',
-        'PASSWORD': 'salpr0',
-        'HOST': 'vpn.ponyneedles.com',
-        'PORT': '1521',
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -124,3 +129,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+SFA_DOMAIN = os.environ.get('SFA_DOMAIN', 'http://mfsales-dev-web-new.us-east-1.elasticbeanstalk.com')
+
+SFA_TOKEN = os.environ.get('SFA_TOKEN', "")
