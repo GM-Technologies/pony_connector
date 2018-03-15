@@ -185,6 +185,19 @@ class DivisionMaster(base_models.AuditModel):
         verbose_name_plural = "Division Master"
         db_table = "GCP_SM01_DIV"
 
+    def to_json(self):
+        return {
+            "division_code": str(self.division_code),
+            "division_name": self.division_name,
+            "division_add1": self.division_add1,
+            "division_add2": self.division_add2,
+            "division_add3": self.division_add3,
+            "division_pincode": self.division_pincode,
+            "division_phonenumber": self.division_phonenumber,
+            "division_fax": self.division_fax,
+            "division_mail": self.division_mail,
+        }
+
 
 class DepoMaster(base_models.AuditModel):
     depo_code = models.IntegerField(primary_key=True, db_column='DEPOCODE')
@@ -209,6 +222,24 @@ class DepoMaster(base_models.AuditModel):
         verbose_name_plural = "Depo Master"
         db_table = "GCP_SM06_DEP"
 
+    def to_json(self):
+        return {
+            "depo_code": str(self.depo_code),
+            "division": self.division_code.to_json(),
+            "depo_name": self.depo_name,
+            "state_code": self.state_code,
+            "depo_add1": self.depo_add1,
+            "depo_add2": self.depo_add2,
+            "depo_add3": self.depo_add3,
+            "depo_pincode": self.depo_pincode,
+            "depo_phonenumber": self.depo_phonenumber,
+            "depo_fax": self.depo_fax,
+            "depo_mail": self.depo_mail,
+            "gst_registered_date": self.gst_registered_date,
+            "price_code": self.price_code,
+            "gstin": self.gstin,
+        }
+
 
 class Market(base_models.AuditModel):
     id = models.IntegerField(primary_key=True, db_column='ID')
@@ -225,31 +256,41 @@ class Market(base_models.AuditModel):
         db_table = "GCP_SM03_MKT"
         unique_together = ['market_code', 'depo_code']
 
+    def to_json(self):
+        return {
+            "id": str(self.id),
+            "depo": self.depo_code.to_json(),
+            "market_code": self.market_code,
+            "market_name": self.market_name,
+            "price_code": str(self.price_code)
+        }
+
 
 class CustomerMaster(base_models.AuditModel):
-    customer_code = models.IntegerField(primary_key=True, db_column='CUSTCODE')
+    customer_code = models.IntegerField(primary_key=True, db_column='CUSTCODE', null=True, blank=True)
+    sfa_temp_id = models.CharField(unique=True, db_column='TEMPID', null=True, blank=True)
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
-    market_code = models.ForeignKey(Market, db_column='MKTCODE')
+    market_code = models.ForeignKey(Market, db_column='MKTCODE', null=True, blank=True)
     customer_name = models.CharField(max_length=50, db_column='CUSTNAME')
-    customer_add1 = models.CharField(max_length=55, db_column='CUSTADD1')
-    customer_add2 = models.CharField(max_length=55, db_column='CUSTADD2')
-    customer_city = models.CharField(max_length=35, db_column='CUSTCITY')
-    customer_pincode = models.IntegerField(db_column='CUSTPIN')
-    state_code = models.CharField(max_length=2, db_column='STATCODE')
+    customer_add1 = models.CharField(max_length=55, db_column='CUSTADD1', null=True, blank=True)
+    customer_add2 = models.CharField(max_length=55, db_column='CUSTADD2', null=True, blank=True)
+    customer_city = models.CharField(max_length=35, db_column='CUSTCITY', null=True, blank=True)
+    customer_pincode = models.IntegerField(db_column='CUSTPIN', null=True, blank=True)
+    state_code = models.CharField(max_length=2, db_column='STATCODE', null=True, blank=True)
     customer_phonenumber = models.CharField(max_length=60, db_column='CUSTPHNO')
-    customer_mail = models.CharField(max_length=35, db_column='CUSTMAIL')
-    mobile_phonenumber = models.CharField(max_length=20, db_column='MOBPHNO')
-    credit_days = models.IntegerField(db_column='CRDAYS')
-    credit_limit = models.IntegerField(db_column='CRLIMIT')
-    designation = models.CharField(max_length=25, db_column='DESIG')
-    mobile = models.CharField(max_length=25, db_column='MOBILE')
-    landline = models.CharField(max_length=25, db_column='LANDLINE')
-    mail = models.CharField(max_length=30, db_column='EMAIL')
-    short_name = models.CharField(max_length=12, db_column='SHORTNAME')
-    depot = models.IntegerField(db_column='DEPOT')
-    customer_id = models.IntegerField(db_column='CUSTID')
-    pan = models.CharField(max_length=15, db_column='PAN')
-    gstin = models.CharField(max_length=15, db_column='GSTIN')
+    customer_mail = models.CharField(max_length=35, db_column='CUSTMAIL', null=True, blank=True)
+    mobile_phonenumber = models.CharField(max_length=20, db_column='MOBPHNO', null=True, blank=True)
+    credit_days = models.IntegerField(db_column='CRDAYS', null=True, blank=True)
+    credit_limit = models.IntegerField(db_column='CRLIMIT', null=True, blank=True)
+    designation = models.CharField(max_length=25, db_column='DESIG', null=True, blank=True)
+    mobile = models.CharField(max_length=25, db_column='MOBILE', null=True, blank=True)
+    landline = models.CharField(max_length=25, db_column='LANDLINE', null=True, blank=True)
+    mail = models.CharField(max_length=30, db_column='EMAIL', null=True, blank=True)
+    short_name = models.CharField(max_length=12, db_column='SHORTNAME', null=True, blank=True)
+    depot = models.IntegerField(db_column='DEPOT', null=True, blank=True)
+    customer_id = models.IntegerField(db_column='CUSTID', null=True, blank=True)
+    pan = models.CharField(max_length=15, db_column='PAN', null=True, blank=True)
+    gstin = models.CharField(max_length=15, db_column='GSTIN', null=True, blank=True)
 
     def __str__(self):
         return "{} - {}".format(self.customer_code, self.depo_code)
@@ -257,6 +298,34 @@ class CustomerMaster(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Customer Master"
         db_table = "GCP_SM17_CUS"
+
+    def to_json(self):
+        return {
+            "customer_code": str(self.customer_code) or "",
+            "sfa_temp_id": self.sfa_temp_id or "",
+            "depo": self.depo_code.to_json(),
+            "market": self.market_code.to_json(),
+            "customer_name": self.customer_name,
+            "customer_add1": self.customer_add1 or "",
+            "customer_add2": self.customer_add2 or "",
+            "customer_city": self.customer_city or "",
+            "customer_pincode": str(self.customer_pincode)  or "",
+            "state_code": self.state_code or "",
+            "customer_phonenumber": self.customer_phonenumber,
+            "customer_mail": self.customer_mail or "",
+            "mobile_phonenumber": self.mobile_phonenumber or "",
+            "credit_days": str(self.credit_days) or "",
+            "credit_limit": str(self.credit_limit) or "",
+            "designation": self.designation or "",
+            "mobile": self.mobile or "",
+            "landline": self.landline or "",
+            "mail": self.mail or "",
+            "short_name": self.short_name or "",
+            "depot": str(self.depot) or "",
+            "customer_id": str(self.customer_id) or "",
+            "pan": self.pan or "",
+            "gstin": self.gstin or ""
+        }
 
 
 class OrderHeader(base_models.AuditModel):
