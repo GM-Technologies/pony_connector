@@ -268,7 +268,7 @@ class Market(base_models.AuditModel):
 
 class CustomerMaster(base_models.AuditModel):
     customer_code = models.IntegerField(primary_key=True, db_column='CUSTCODE', null=True, blank=True)
-    sfa_temp_id = models.CharField(unique=True, db_column='TEMPID', null=True, blank=True)
+    sfa_temp_id = models.CharField(unique=True, max_length=50, db_column='TEMPID', null=True, blank=True)
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     market_code = models.ForeignKey(Market, db_column='MKTCODE', null=True, blank=True)
     customer_name = models.CharField(max_length=50, db_column='CUSTNAME')
@@ -301,7 +301,7 @@ class CustomerMaster(base_models.AuditModel):
 
     def to_json(self):
         return {
-            "customer_code": str(self.customer_code) or "",
+            "customer_code": str(self.customer_code or ""),
             "sfa_temp_id": self.sfa_temp_id or "",
             "depo": self.depo_code.to_json(),
             "market": self.market_code.to_json(),
@@ -314,15 +314,15 @@ class CustomerMaster(base_models.AuditModel):
             "customer_phonenumber": self.customer_phonenumber,
             "customer_mail": self.customer_mail or "",
             "mobile_phonenumber": self.mobile_phonenumber or "",
-            "credit_days": str(self.credit_days) or "",
-            "credit_limit": str(self.credit_limit) or "",
+            "credit_days": str(self.credit_days or ""),
+            "credit_limit": str(self.credit_limit or ""),
             "designation": self.designation or "",
             "mobile": self.mobile or "",
             "landline": self.landline or "",
             "mail": self.mail or "",
             "short_name": self.short_name or "",
-            "depot": str(self.depot) or "",
-            "customer_id": str(self.customer_id) or "",
+            "depot": str(self.depot or ""),
+            "customer_id": str(self.customer_id or ""),
             "pan": self.pan or "",
             "gstin": self.gstin or ""
         }
@@ -353,11 +353,33 @@ class OrderHeader(base_models.AuditModel):
         db_table = "GCP_ST05_ORD_HDR"
         unique_together = ['order_number', 'order_date']
 
+    def to_json(self, customer_detail=False, depo_detail=False):
+        return {
+            "id": str(self.id),
+            "order_number": str(self.order_number or ""),
+            "sfa_order_number": str(self.sfa_order_number or ""),
+            "order_date": str(self.order_date),
+            "customer": self.customer_code.to_json() if customer_detail
+            else str(self.customer_code.customer_code),
+            "depo": self.depo_code.to_json() if depo_detail
+            else str(self.depo_code.depo_code),
+            "customer_reference_number": self.customer_reference_number or "",
+            "customer_reference_date": str(self.customer_reference_date or ""),
+            "fs_code": self.fs_code or "",
+            "order_value": str(self.order_value),
+            "status": str(self.status),
+            "order_created_date": str(self.order_created_date),
+            "discount": str(self.discount or ""),
+            "order_value_rs": str(self.order_value_rs or ""),
+            "shipped_date": str(self.shipped_date or ""),
+            "order_details": [each.to_json() for each in self.orderdetails_set.all()]
+        }
+
 
 class OrderDetails(base_models.AuditModel):
     id = models.IntegerField(primary_key=True, db_column='ID')
     order = models.ForeignKey(OrderHeader, db_column='ORDID')
-    order_number = models.IntegerField(db_column='OPNO')
+    order_number = models.IntegerField(null=True, blank=True, db_column='OPNO')
     order_date = models.DateField(db_column='OPDT')
     product_code = models.ForeignKey(ProductMaster, db_column='PRODCODE')
     order_quantity = models.IntegerField(db_column='ORDQTY')
@@ -379,6 +401,26 @@ class OrderDetails(base_models.AuditModel):
         verbose_name_plural = "Order Details"
         db_table = "GCP_ST06_ORD_DTL"
         unique_together = ['order_number', 'order_date', 'product_code']
+
+    def to_json(self, with_product=False):
+        return {
+            "id": str(self.id),
+            "order_number": str(self.order_number or ""),
+            "order_date": str(self.order_date),
+            "product": self.product_code.to_json()
+            if with_product else str(self.product_code.product_code),
+            "order_quantity": str(self.order_quantity),
+            "adjust_quantity": str(self.adjust_quantity or ""),
+            "adjust_value": str(self.adjust_value or ""),
+            "discount": str(self.discount or ""),
+            "all_quantity": str(self.all_quantity or ""),
+            "sent_quantity": str(self.sent_quantity or ""),
+            "hold_quantity": str(self.hold_quantity or ""),
+            "status": self.status or "",
+            "amount": str(self.amount),
+            "order_created_date": str(self.order_created_date or ""),
+            "order_detail_id": str(self.order_detail_id or "")
+        }
 
 
 class StockMaster(base_models.AuditModel):
@@ -403,6 +445,22 @@ class StockMaster(base_models.AuditModel):
         db_table = "GCP_WM01_STK_MAS"
         unique_together = ['product_code', 'month', 'depo_code',
                            'stock_flag', 'op_number', 'op_date']
+
+    def to_json(self):
+        return {
+            "id": str(self.id),
+            "product": str(self.product_code.product_code),
+            "month": str(self.month),
+            "depo": str(self.depo_code.depo_code),
+            "stock_flag": self.stock_flag,
+            "op_number": str(self.op_number),
+            "op_date": str(self.op_date),
+            "op_stock": str(self.op_stock),
+            "quantity_received": str(self.quantity_received),
+            "all_quantity": str(self.all_quantity),
+            "clear_stock": str(self.clear_stock),
+            "free_stock": str(self.free_stock)
+        }
 
 
 class InvoiceHeader(base_models.AuditModel):
@@ -445,6 +503,42 @@ class InvoiceHeader(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Invoice Header"
         db_table = "GCP_ST16_INV_HDR"
+
+    def to_json(self):
+        return {
+            "id": str(self.id),
+            "invoice_number": str(self.invoice_number),
+            "invoice_date": str(self.invoice_date),
+            "invoice_type": self.invoice_date,
+            "allocation_number": str(self.allocation_number),
+            "allocation_date": str(self.allocation_date),
+            "cancel": self.cancel,
+            "depo": str(self.depo_code.depo_code),
+            "bank_code": str(self.bank_code),
+            "bank_document_date": str(self.bank_document_date),
+            "customer": str(self.customer_code.customer_code),
+            "balance_amount": str(self.balance_amount),
+            "total": str(self.total),
+            "total_discount": str(self.total_discount),
+            "remarks": self.remarks,
+            "roundoff": str(self.roundoff),
+            "total_product_value": str(self.total_product_value),
+            "total_discount_value": str(self.total_discount_value),
+            "total_tax_value": str(self.total_tax_value),
+            "total_tax_amount": str(self.total_tax_amount),
+            "net_amount": str(self.net_amount),
+            "advance_amount": str(self.advance_amount),
+            "credit_amount": str(self.credit_amount),
+            "dr_amount": str(self.dr_amount),
+            "paid_amount": str(self.paid_amount),
+            "invoice_amount": str(self.invoice_amount),
+            "other_charges": str(self.other_charges),
+            "gross_weight": str(self.gross_weight),
+            "total_cgst_amount": str(self.total_cgst_amount),
+            "total_sgst_amount": str(self.total_sgst_amount),
+            "total_igst_amount": str(self.total_igst_amount),
+            "invoice_gstin": self.invoice_gstin
+        }
 
 
 class InvoiceDetails(base_models.AuditModel):
