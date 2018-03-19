@@ -537,7 +537,8 @@ class InvoiceHeader(base_models.AuditModel):
             "total_cgst_amount": str(self.total_cgst_amount),
             "total_sgst_amount": str(self.total_sgst_amount),
             "total_igst_amount": str(self.total_igst_amount),
-            "invoice_gstin": self.invoice_gstin
+            "invoice_gstin": self.invoice_gstin,
+            "invoice_details": [each.to_json() for each in self.invoicedetails_set.all()]
         }
 
 
@@ -571,6 +572,31 @@ class InvoiceDetails(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Invoice Details"
         db_table = "GCP_ST17_INV_DTL"
+
+    def to_json(self):
+        return {
+            'id': str(self.id),
+            'product_code': str(self.product_code.product_code),
+            'product_quantity': str(self.product_quantity),
+            'product_rate': str(self.product_rate),
+            'amount': str(self.amount),
+            'discount_percentage': str(self.discount_percentage),
+            'discount_amount': str(self.discount_amount),
+            'tax_amount': str(self.tax_amount),
+            'net_amount': str(self.net_amount),
+            'ret_quantity': str(self.ret_quantity),
+            'order_number': str(self.order_number),
+            'order_date': str(self.order_date),
+            'total': str(self.total),
+            'cgst_per': str(self.cgst_per),
+            'cgst_amount': str(self.cgst_amount),
+            'sgst_per': str(self.sgst_per),
+            'sgst_amount': str(self.sgst_amount),
+            'igst_per': str(self.igst_per),
+            'igst_amount': str(self.igst_amount),
+            'item_type': self.item_type,
+            'tarrifid': str(self.tarrifid.tariff_id)
+        }
 
 
 class CollectionHeader(base_models.AuditModel):
@@ -620,6 +646,45 @@ class CollectionHeader(base_models.AuditModel):
         db_table = "GCP_FT71_RECEIPT_MAS"
         unique_together = ['depo_code', 'receipt_number']
 
+    def to_json(self):
+        return {
+            'id': str(self.id),
+            'sfa_receipt_id': str(self.sfa_receipt_id or ""),
+            'depo_code': str(self.depo_code.depo_code),
+            'rmasid': str(self.rmasid or ""),
+            'sl_no': str(self.sl_no or ""),
+            'receipt_number': str(self.receipt_number or ""),
+            'receipt_date': str(self.receipt_date),
+            'm_receipt_number': str(self.m_receipt_number or ""),
+            'm_receipt_date': str(self.m_receipt_date or ""),
+            'voucher_type': self.voucher_type or "",
+            'customer_code': str(self.customer_code.customer_code),
+            'pay_code': str(self.pay_code or ""),
+            'doc_number': self.doc_number or "",
+            'doc_date': str(self.doc_date or ""),
+            'bank_name': self.bank_name or "",
+            'br_name': self.br_name or "",
+            'received_amount': str(self.received_amount),
+            'advance_code': str(self.advance_code or ""),
+            'advance_amount': str(self.advance_amount or ""),
+            'bgl_code': str(self.bgl_code or ""),
+            'bcgs_code': str(self.bcgs_code or ""),
+            'bint_code': str(self.bint_code or ""),
+            'deposit_flag': str(self.deposit_flag or ""),
+            'bonus_flag': str(self.bonus_flag or ""),
+            'round_plus': str(self.round_plus or ""),
+            'round_minus': str(self.round_minus or ""),
+            'c_flag': str(self.c_flag or ""),
+            'cash_receipt_number': str(self.cash_receipt_number or ""),
+            'cash_receipt_date': str(self.cash_receipt_date or ""),
+            'remarks': self.remarks or "",
+            'dis_receipt_number': str(self.dis_receipt_number or ""),
+            'place_supply': self.place_supply or "",
+            'courier_charges': str(self.courier_charges or ""),
+            'inter_state': self.inter_state or "",
+            'clearing_flag': str(self.clearing_flag or "")
+        }
+
 
 class CollectionDetails(base_models.AuditModel):
     id = models.IntegerField(primary_key=True, db_column='ID')
@@ -636,7 +701,7 @@ class CollectionDetails(base_models.AuditModel):
     received_amount = models.IntegerField(null=True, blank=True, db_column='RECDAMT')
     invoice_code = models.ForeignKey(InvoiceHeader, null=True, blank=True, db_column='INVNO')
     order_code = models.ForeignKey(OrderHeader, null=True, blank=True, db_column='OPNO')
-    tarif_id = models.ForeignKey(TariffMaster, db_column='TARIFFID')
+    tariff_id = models.ForeignKey(TariffMaster, null=True, blank=True, db_column='TARIFFID')
     cgst_per = models.IntegerField(null=True, blank=True, db_column='CGSTPER')
     cgst_amount = models.IntegerField(null=True, blank=True, db_column='CGSTAMT')
     sgst_per = models.IntegerField(null=True, blank=True, db_column='SGSTPER')
@@ -651,3 +716,28 @@ class CollectionDetails(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Collection Details"
         db_table = "GCP_FT72_RECEIPT_DTL"
+
+    def to_json(self):
+        return {
+            'id': str(self.id),
+            'depo_code': str(self.depo_code.depo_code),
+            'dtlid': str(self.dtlid or ""),
+            'rmasid': str(self.rmasid or ""),
+            'receipt_number': str(self.receipt_number or ""),
+            'invoice_id': str(self.invoice_id or ""),
+            'gl_code': str(self.gl_code or ""),
+            'bcgs': str(self.bcgs or ""),
+            'bint': str(self.bint or ""),
+            'othamt': str(self.othamt or ""),
+            'received_amount': str(self.received_amount or ""),
+            'invoice_code': str(self.invoice_code.id if self.invoice_code else ""),
+            'order_code': str(self.order_code.id if self.order_code else ""),
+            'tarif_id': str(self.tariff_id.tariff_id if self.tariff_id else ""),
+            'cgst_per': str(self.cgst_per or ""),
+            'cgst_amount': str(self.cgst_amount or ""),
+            'sgst_per': str(self.sgst_per or ""),
+            'sgst_amount': str(self.sgst_amount or ""),
+            'igst_per': str(self.igst_per or ""),
+            'igst_amount': str(self.igst_amount or ""),
+            'total_tax_value': str(self.total_tax_value or "")
+        }
