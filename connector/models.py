@@ -25,7 +25,7 @@ class ProductCategory(base_models.AuditModel):
 
 
 class ProductSubCategory(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     code = models.IntegerField(db_column='SUBGRP')
     category = models.ForeignKey(ProductCategory, db_column='GRPCODE')
     description = models.CharField(max_length=55, db_column='SGRPDESC')
@@ -128,7 +128,7 @@ class ProductMaster(base_models.AuditModel):
 
 
 class Price(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     price_code = models.IntegerField(db_column='PRICECODE')
     with_effect_from = models.DateField(db_column='WEFDATE')
     product_code = models.ForeignKey(ProductMaster, db_column='PRODCODE')
@@ -154,7 +154,7 @@ class Price(base_models.AuditModel):
 
 
 class User(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     user_id = models.IntegerField(db_column='USERID')
     user_name = models.CharField(max_length=40, db_column='USERNAME')
     dept_code = models.IntegerField(db_column='DEPTCODE')
@@ -242,7 +242,7 @@ class DepoMaster(base_models.AuditModel):
 
 
 class Market(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     market_code = models.IntegerField(db_column='MKTCODE')
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     market_name = models.CharField(max_length=25, db_column='MKTNAME')
@@ -267,7 +267,7 @@ class Market(base_models.AuditModel):
 
 
 class CustomerMaster(base_models.AuditModel):
-    customer_code = models.IntegerField(primary_key=True, db_column='CUSTCODE', null=True, blank=True)
+    customer_code = models.IntegerField(primary_key=True, db_column='CUSTCODE')
     sfa_temp_id = models.CharField(unique=True, max_length=50, db_column='TEMPID', null=True, blank=True)
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     market_code = models.ForeignKey(Market, db_column='MKTCODE', null=True, blank=True)
@@ -329,7 +329,7 @@ class CustomerMaster(base_models.AuditModel):
 
 
 class OrderHeader(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     order_number = models.IntegerField(null=True, blank=True, db_column='OPNO')
     sfa_order_number = models.CharField(max_length=100, null=True, blank=True, db_column='SFAOPNO')
     order_date = models.DateField(db_column='OPDT')
@@ -377,7 +377,7 @@ class OrderHeader(base_models.AuditModel):
 
 
 class OrderDetails(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     order = models.ForeignKey(OrderHeader, db_column='ORDID')
     order_number = models.IntegerField(null=True, blank=True, db_column='OPNO')
     order_date = models.DateField(db_column='OPDT')
@@ -424,7 +424,7 @@ class OrderDetails(base_models.AuditModel):
 
 
 class StockMaster(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     product_code = models.ForeignKey(ProductMaster, db_column='PRODCODE')
     month = models.DateField(db_column='MONTH')
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
@@ -464,7 +464,7 @@ class StockMaster(base_models.AuditModel):
 
 
 class InvoiceHeader(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     invoice_number = models.IntegerField(db_column='INVNO')
     invoice_date = models.DateField(db_column='INVDT')
     invoice_type = models.CharField(max_length=1, db_column='INVTYPE')
@@ -543,7 +543,7 @@ class InvoiceHeader(base_models.AuditModel):
 
 
 class InvoiceDetails(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     invoice_header = models.ForeignKey(InvoiceHeader, db_column='INVHDR')
     product_code = models.ForeignKey(ProductMaster, db_column='PRODCODE')
     product_quantity = models.IntegerField(db_column='PRODQTY')
@@ -600,7 +600,7 @@ class InvoiceDetails(base_models.AuditModel):
 
 
 class CollectionHeader(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     sfa_receipt_id = models.IntegerField(null=True, blank=True, db_column='SFAID')
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     rmasid = models.IntegerField(null=True, blank=True, db_column='RMASID')
@@ -687,7 +687,7 @@ class CollectionHeader(base_models.AuditModel):
 
 
 class CollectionDetails(base_models.AuditModel):
-    id = models.IntegerField(primary_key=True, db_column='ID')
+    id = models.AutoField(primary_key=True, db_column='ID')
     collection = models.ForeignKey(CollectionHeader, db_column='COLID')
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     dtlid = models.IntegerField(null=True, blank=True, db_column='DTLID')

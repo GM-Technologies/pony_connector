@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'connector.apps.ConnectorConfig'
+    'connector.apps.ConnectorConfig',
+    'kronos'
 ]
 
 MIDDLEWARE = [
@@ -74,6 +75,12 @@ WSGI_APPLICATION = 'pony_connector.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+
+# DB_NAME = os.environ.get('DB_NAME', 'niil')
+# DB_USER = os.environ.get('DB_USER', 'sales')
+# DB_HOST = os.environ.get('DB_HOST', 'vpn.ponyneedles.com')
+# DB_PORT = os.environ.get('DB_PORT', '1521')
+# DB_PASSWORD = os.environ.get('DB_PASSWORD', 'needles')
 
 DB_NAME = os.environ.get('DB_NAME', 'xe')
 DB_USER = os.environ.get('DB_USER', 'pony')
