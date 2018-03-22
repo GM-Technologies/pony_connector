@@ -20,7 +20,8 @@ class ProductCategory(base_models.AuditModel):
     def to_json(self):
         return {
             "code": str(self.code),
-            "name": self.name
+            "name": self.name,
+            "is_sync": self.is_sync
         }
 
 
@@ -43,7 +44,8 @@ class ProductSubCategory(base_models.AuditModel):
             "id": str(self.id),
             "code": str(self.code),
             "category": self.category.to_json(),
-            "description": self.description
+            "description": self.description,
+            "is_sync": self.is_sync
         }
 
 
@@ -63,7 +65,8 @@ class TariffHeader(base_models.AuditModel):
         return {
             "category": self.category.to_json(),
             "name": self.name,
-            "type": self.type
+            "type": self.type,
+            "is_sync": self.is_sync
         }
 
 
@@ -87,7 +90,8 @@ class TariffMaster(base_models.AuditModel):
             "tariff_header": self.tariff_header.to_json(),
             "description": self.description,
             "hsn_code": self.hsn_code,
-            "gst": str(self.gst)
+            "gst": str(self.gst),
+            "is_sync": self.is_sync
         }
 
 
@@ -123,7 +127,8 @@ class ProductMaster(base_models.AuditModel):
             "category": self.category.to_json(),
             "sub_category": self.sub_category.to_json(),
             "tariff": self.tariff.to_json(),
-            "price": current_price
+            "price": current_price,
+            "is_sync": self.is_sync
         }
 
 
@@ -149,7 +154,8 @@ class Price(base_models.AuditModel):
             "with_effect_from": str(self.with_effect_from),
             "product": self.product_code.to_json() if
             with_product else self.product_code.product_code,
-            "price": str(self.price)
+            "price": str(self.price),
+            "is_sync": self.is_sync
         }
 
 
@@ -267,7 +273,8 @@ class Market(base_models.AuditModel):
 
 
 class CustomerMaster(base_models.AuditModel):
-    customer_code = models.IntegerField(primary_key=True, db_column='CUSTCODE')
+    id = models.AutoField(primary_key=True, db_column='ID')
+    customer_code = models.IntegerField(db_column='CUSTCODE', null=True, blank=True)
     sfa_temp_id = models.CharField(unique=True, max_length=50, db_column='TEMPID', null=True, blank=True)
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     market_code = models.ForeignKey(Market, db_column='MKTCODE', null=True, blank=True)

@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'connector.apps.ConnectorConfig',
-    'kronos'
+    'kronos',
+    'django_extensions'
 ]
 
 MIDDLEWARE = [
@@ -123,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -137,6 +138,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-SFA_DOMAIN = os.environ.get('SFA_DOMAIN', 'http://mfsales-dev-web-new.us-east-1.elasticbeanstalk.com')
+SFA_DOMAIN = os.environ.get('SFA_DOMAIN', 'http://localhost:8000')
 
-SFA_TOKEN = os.environ.get('SFA_TOKEN', "")
+SFA_TOKEN = os.environ.get('SFA_TOKEN', '7fe724c1d17dcff698d919e1c9422a0a58c09720')
