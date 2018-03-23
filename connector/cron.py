@@ -13,7 +13,12 @@ from connector.utils import get_paginated_objects
 
 @kronos.register('*/3 * * * *')
 def data_sync():
-    print "Initiating product sync"
+    print "Product sync initiated at {}".format(datetime.now())
+    product_sync()
+    print "Product sync completed at {}".format(datetime.now())
+
+
+def product_sync():
     unsynced_products = list(ProductMaster.objects.filter(
         Q(Q(Q(is_sync=False) |
             Q(category__is_sync=False) |
@@ -25,18 +30,36 @@ def data_sync():
                                 'tariff'))
     synced = False
     page = 1
-    per_page = 1
+    per_page = 50
     while not synced and len(unsynced_products):
         products, pagination_info = get_paginated_objects(unsynced_products, page, per_page)
-        products = [each.to_json() for each in products]
+        product_data = [each.to_json() for each in products]
         try:
             request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
             sync_product = requests.post(url=sfa_urls.PRODUCT_SYNC,
-                                         data={'products': json.dumps(products)},
+                                         data={'products': json.dumps(product_data)},
                                          headers=request_headers)
-            print sync_product.status_code
-        except:
-            print "Failed"
+            response = json.loads(sync_product.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    product = ProductMaster.objects.get(product_code=each['product_code'])
+                    product.is_sync = each['is_sync']
+                    product.save(update_fields=['is_sync'])
+                    category = product.category
+                    category.is_sync = each['is_sync']
+                    category.save(update_fields=['is_sync'])
+                    sub_category = product.sub_category
+                    sub_category.is_sync = each['is_sync']
+                    sub_category.save(update_fields=['is_sync'])
+                    price = product.price_set.all().get(id=each['price'].get('id'))
+                    price.is_sync = each['is_sync']
+                    price.save(update_fields=['is_sync'])
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
         if pagination_info['has_next']():
             page = pagination_info['next_page_number']()
         else:
