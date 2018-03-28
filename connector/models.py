@@ -202,6 +202,7 @@ class DivisionMaster(base_models.AuditModel):
             "division_phonenumber": self.division_phonenumber,
             "division_fax": self.division_fax,
             "division_mail": self.division_mail,
+            "is_sync": self.is_sync
         }
 
 

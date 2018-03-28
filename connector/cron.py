@@ -7,7 +7,7 @@ import requests
 from django.db.models.query_utils import Q
 
 from connector import sfa_urls
-from connector.models import ProductMaster
+from connector.models import ProductMaster, DivisionMaster
 from connector.utils import get_paginated_objects
 
 
@@ -16,6 +16,9 @@ def data_sync():
     print "Product sync initiated at {}".format(datetime.now())
     product_sync()
     print "Product sync completed at {}".format(datetime.now())
+    print "Division sync initiated at {}".format(datetime.now())
+    division_sync()
+    print "Division sync completed at {}".format(datetime.now())
 
 
 def product_sync():
@@ -56,6 +59,39 @@ def product_sync():
                     price = product.price_set.all().get(id=each['price'].get('id'))
                     price.is_sync = each['is_sync']
                     price.save(update_fields=['is_sync'])
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
+
+
+def division_sync():
+    unsynced_divisions = list(DivisionMaster.objects.filter(is_sync=False))
+    synced = False
+    page = 1
+    per_page = 50
+    while not synced and len(unsynced_divisions):
+        divisions, pagination_info = get_paginated_objects(unsynced_divisions, page, per_page)
+        division_data = [each.to_json() for each in divisions]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_division = requests.post(url=sfa_urls.DIVISION_SYNC,
+                                         data={'divisions': json.dumps(division_data)},
+                                         headers=request_headers)
+            if not sync_division.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_division.status_code))
+            response = json.loads(sync_division.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    division = DivisionMaster.objects.get(product_code=each['division_code'])
+                    division.is_sync = each['is_sync']
+                    division.save(update_fields=['is_sync'])
                 except BaseException as ex:
                     print ex
         except BaseException as ex:

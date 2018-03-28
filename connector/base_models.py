@@ -5,7 +5,10 @@ from django_tools.middlewares import ThreadLocal
 
 class AuditModel(models.Model):
     created_date = models.DateTimeField(auto_now_add=True, db_column='DJCREATEDDATE')
-    modified_date = models.DateTimeField(auto_now=True, db_column='DJMODIFIEDDATE')
+    modified_date = models.DateTimeField(auto_now=True,
+                                         db_column='DJMODIFIEDDATE',
+                                         null=True,
+                                         blank=True)
     created_by = models.ForeignKey("auth.User",
                                    related_name="created_%(class)s_set",
                                    null=True,
