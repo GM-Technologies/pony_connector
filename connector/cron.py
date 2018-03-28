@@ -89,7 +89,7 @@ def division_sync():
                 if not each:
                     continue
                 try:
-                    division = DivisionMaster.objects.get(product_code=each['division_code'])
+                    division = DivisionMaster.objects.get(division_code=each['division_code'])
                     division.is_sync = each['is_sync']
                     division.save(update_fields=['is_sync'])
                 except BaseException as ex:
