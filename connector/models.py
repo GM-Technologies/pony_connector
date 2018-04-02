@@ -229,10 +229,11 @@ class DepoMaster(base_models.AuditModel):
         verbose_name_plural = "Depo Master"
         db_table = "GCP_SM06_DEP"
 
-    def to_json(self):
+    def to_json(self, with_division=False):
         return {
             "depo_code": str(self.depo_code),
-            "division": self.division_code.to_json(),
+            "division": self.division_code.to_json() if with_division
+            else self.division_code.division_code,
             "depo_name": self.depo_name,
             "state_code": self.state_code,
             "depo_add1": self.depo_add1,
@@ -242,9 +243,10 @@ class DepoMaster(base_models.AuditModel):
             "depo_phonenumber": self.depo_phonenumber,
             "depo_fax": self.depo_fax,
             "depo_mail": self.depo_mail,
-            "gst_registered_date": self.gst_registered_date,
+            "gst_registered_date": str(self.gst_registered_date),
             "price_code": self.price_code,
             "gstin": self.gstin,
+            "is_sync": self.is_sync
         }
 
 
@@ -283,7 +285,7 @@ class CustomerMaster(base_models.AuditModel):
     customer_add1 = models.CharField(max_length=55, db_column='CUSTADD1', null=True, blank=True)
     customer_add2 = models.CharField(max_length=55, db_column='CUSTADD2', null=True, blank=True)
     customer_city = models.CharField(max_length=35, db_column='CUSTCITY', null=True, blank=True)
-    customer_pincode = models.IntegerField(db_column='CUSTPIN', null=True, blank=True)
+    customer_pincode = models.CharField(db_column='CUSTPIN', max_length=10, null=True, blank=True)
     state_code = models.CharField(max_length=2, db_column='STATCODE', null=True, blank=True)
     customer_phonenumber = models.CharField(max_length=60, db_column='CUSTPHNO')
     customer_mail = models.CharField(max_length=35, db_column='CUSTMAIL', null=True, blank=True)

@@ -7,7 +7,7 @@ import requests
 from django.db.models.query_utils import Q
 
 from connector import sfa_urls
-from connector.models import ProductMaster, DivisionMaster
+from connector.models import ProductMaster, DivisionMaster, DepoMaster
 from connector.utils import get_paginated_objects
 
 
@@ -19,6 +19,9 @@ def data_sync():
     print "Division sync initiated at {}".format(datetime.now())
     division_sync()
     print "Division sync completed at {}".format(datetime.now())
+    print "Depo sync initiated at {}".format(datetime.now())
+    depo_sync()
+    print "Depo sync completed at {}".format(datetime.now())
 
 
 def product_sync():
@@ -92,6 +95,39 @@ def division_sync():
                     division = DivisionMaster.objects.get(division_code=each['division_code'])
                     division.is_sync = each['is_sync']
                     division.save(update_fields=['is_sync'])
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
+
+
+def depo_sync():
+    unsynced_depos = list(DepoMaster.objects.filter(is_sync=False))
+    synced = False
+    page = 1
+    per_page = 50
+    while not synced and len(unsynced_depos):
+        depos, pagination_info = get_paginated_objects(unsynced_depos, page, per_page)
+        depo_data = [each.to_json() for each in depos]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_depo = requests.post(url=sfa_urls.DEPO_SYNC,
+                                         data={'depos': json.dumps(depo_data)},
+                                         headers=request_headers)
+            if not sync_depo.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_depo.status_code))
+            response = json.loads(sync_depo.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    depo = DepoMaster.objects.get(depo_code=each['depo_code'])
+                    depo.is_sync = each['is_sync']
+                    depo.save(update_fields=['is_sync'])
                 except BaseException as ex:
                     print ex
         except BaseException as ex:
