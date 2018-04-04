@@ -7,11 +7,11 @@ import requests
 from django.db.models.query_utils import Q
 
 from connector import sfa_urls
-from connector.models import ProductMaster, DivisionMaster, DepoMaster
+from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster
 from connector.utils import get_paginated_objects
 
 
-@kronos.register('*/3 * * * *')
+@kronos.register('*/5 * * * *')
 def data_sync():
     print "Product sync initiated at {}".format(datetime.now())
     product_sync()
@@ -22,6 +22,9 @@ def data_sync():
     print "Depo sync initiated at {}".format(datetime.now())
     depo_sync()
     print "Depo sync completed at {}".format(datetime.now())
+    print "Customer sync initiated at {}".format(datetime.now())
+    customer_sync()
+    print "Customer sync completed at {}".format(datetime.now())
 
 
 def product_sync():
@@ -128,6 +131,40 @@ def depo_sync():
                     depo = DepoMaster.objects.get(depo_code=each['depo_code'])
                     depo.is_sync = each['is_sync']
                     depo.save(update_fields=['is_sync'])
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
+
+
+def customer_sync():
+    unsynced_customers = list(CustomerMaster.objects.filter(customer_code__isnull=False,
+                                                            is_sync=False))
+    synced = False
+    page = 1
+    per_page = 50
+    while not synced and len(unsynced_customers):
+        customers, pagination_info = get_paginated_objects(unsynced_customers, page, per_page)
+        customer_data = [each.to_json() for each in customers]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_customer = requests.post(url=sfa_urls.CUSTOMER_SYNC,
+                                         data={'customers': json.dumps(customer_data)},
+                                         headers=request_headers)
+            if not sync_customer.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_customer.status_code))
+            response = json.loads(sync_customer.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    customer = CustomerMaster.objects.get(id=each['id'])
+                    customer.is_sync = each['is_sync']
+                    customer.save(update_fields=['is_sync'])
                 except BaseException as ex:
                     print ex
         except BaseException as ex:

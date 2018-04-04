@@ -311,10 +311,11 @@ class CustomerMaster(base_models.AuditModel):
 
     def to_json(self):
         return {
+            "id": str(self.id),
             "customer_code": str(self.customer_code or ""),
             "sfa_temp_id": self.sfa_temp_id or "",
-            "depo": self.depo_code.to_json(),
-            "market": self.market_code.to_json(),
+            "depo": self.depo_code.depo_code,
+            "market": self.market_code.market_code if self.market_code else "",
             "customer_name": self.customer_name,
             "customer_add1": self.customer_add1 or "",
             "customer_add2": self.customer_add2 or "",
@@ -334,7 +335,8 @@ class CustomerMaster(base_models.AuditModel):
             "depot": str(self.depot or ""),
             "customer_id": str(self.customer_id or ""),
             "pan": self.pan or "",
-            "gstin": self.gstin or ""
+            "gstin": self.gstin or "",
+            "is_sync": self.is_sync
         }
 
 
