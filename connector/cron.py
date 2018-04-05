@@ -1,9 +1,9 @@
 import json
+from datetime import datetime
 
 import kronos
-from datetime import datetime
-from django.conf import settings
 import requests
+from django.conf import settings
 from django.db.models.query_utils import Q
 
 from connector import sfa_urls
@@ -86,8 +86,8 @@ def division_sync():
         try:
             request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
             sync_division = requests.post(url=sfa_urls.DIVISION_SYNC,
-                                         data={'divisions': json.dumps(division_data)},
-                                         headers=request_headers)
+                                          data={'divisions': json.dumps(division_data)},
+                                          headers=request_headers)
             if not sync_division.status_code == 200:
                 raise Exception('{} response from SFA'.format(sync_division.status_code))
             response = json.loads(sync_division.content)
@@ -119,8 +119,8 @@ def depo_sync():
         try:
             request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
             sync_depo = requests.post(url=sfa_urls.DEPO_SYNC,
-                                         data={'depos': json.dumps(depo_data)},
-                                         headers=request_headers)
+                                      data={'depos': json.dumps(depo_data)},
+                                      headers=request_headers)
             if not sync_depo.status_code == 200:
                 raise Exception('{} response from SFA'.format(sync_depo.status_code))
             response = json.loads(sync_depo.content)
@@ -153,8 +153,8 @@ def customer_sync():
         try:
             request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
             sync_customer = requests.post(url=sfa_urls.CUSTOMER_SYNC,
-                                         data={'customers': json.dumps(customer_data)},
-                                         headers=request_headers)
+                                          data={'customers': json.dumps(customer_data)},
+                                          headers=request_headers)
             if not sync_customer.status_code == 200:
                 raise Exception('{} response from SFA'.format(sync_customer.status_code))
             response = json.loads(sync_customer.content)
@@ -176,7 +176,7 @@ def customer_sync():
     try:
         request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
         sync_customer = requests.get(url=sfa_urls.CUSTOMER_SYNC,
-                                      headers=request_headers)
+                                     headers=request_headers)
         if not sync_customer.status_code == 200:
             raise Exception('{} response from SFA'.format(sync_customer.status_code))
         response = json.loads(sync_customer.content)
@@ -188,7 +188,9 @@ def customer_sync():
                 depo = DepoMaster.objects.get(depo_code=each['depo'])
                 try:
                     customer = CustomerMaster.objects.get(Q(Q(customer_code=each['customer_code']) |
-                                                          Q(sfa_temp_id=each['sfa_temp_id'])))
+                                                            Q(sfa_temp_id=each['sfa_temp_id'])),
+                                                          ~Q(customer_code=""),
+                                                          ~Q(sfa_temp_id=""))
                     customer.depo_code = depo
                     customer.sfa_temp_id = each['sfa_temp_id'] or None
                     customer.customer_mail = each['customer_mail'] or None
@@ -214,7 +216,7 @@ def customer_sync():
                     customer.customer_add2 = each['customer_add2'] or None
                     customer.save()
                 except CustomerMaster.DoesNotExist:
-                    CustomerMaster.objects.\
+                    CustomerMaster.objects. \
                         create(sfa_temp_id=each['sfa_temp_id'] or None,
                                customer_mail=each['customer_mail'] or None,
                                customer_pincode=each['customer_pincode'] or None,
