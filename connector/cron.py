@@ -173,3 +173,81 @@ def customer_sync():
             page = pagination_info['next_page_number']()
         else:
             synced = True
+    try:
+        request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+        sync_customer = requests.get(url=sfa_urls.CUSTOMER_SYNC,
+                                      headers=request_headers)
+        if not sync_customer.status_code == 200:
+            raise Exception('{} response from SFA'.format(sync_customer.status_code))
+        response = json.loads(sync_customer.content)
+        success_ids = []
+        for each in response:
+            if not each:
+                continue
+            try:
+                depo = DepoMaster.objects.get(depo_code=each['depo'])
+                try:
+                    customer = CustomerMaster.objects.get(Q(Q(customer_code=each['customer_code']) |
+                                                          Q(sfa_temp_id=each['sfa_temp_id'])))
+                    customer.depo_code = depo
+                    customer.sfa_temp_id = each['sfa_temp_id'] or None
+                    customer.customer_mail = each['customer_mail'] or None
+                    customer.customer_pincode = each['customer_pincode'] or None
+                    customer.customer_phonenumber = each['customer_phonenumber'] or None
+                    customer.customer_name = each['customer_name'] or None
+                    customer.customer_city = each['customer_city'] or None
+                    customer.credit_days = each['credit_days'] or None
+                    customer.landline = each['landline'] or None
+                    customer.mail = each['mail'] or None
+                    customer.mobile_phonenumber = each['mobile_phonenumber'] or None
+                    customer.customer_id = each['customer_id'] or None
+                    customer.pan = each['pan'] or None
+                    customer.customer_code = each['customer_code'] or None
+                    customer.short_name = each['short_name'] or None
+                    customer.credit_limit = each['credit_limit'] or None
+                    customer.state_code = each['state_code'] or None
+                    customer.gstin = each['gstin'] or None
+                    customer.depot = each['depot'] or None
+                    customer.designation = each['designation'] or None
+                    customer.mobile = each['mobile'] or None
+                    customer.customer_add1 = each['customer_add1'] or None
+                    customer.customer_add2 = each['customer_add2'] or None
+                    customer.save()
+                except CustomerMaster.DoesNotExist:
+                    CustomerMaster.objects.\
+                        create(sfa_temp_id=each['sfa_temp_id'] or None,
+                               customer_mail=each['customer_mail'] or None,
+                               customer_pincode=each['customer_pincode'] or None,
+                               customer_phonenumber=each['customer_phonenumber'] or None,
+                               customer_name=each['customer_name'] or None,
+                               customer_city=each['customer_city'] or None,
+                               credit_days=each['credit_days'] or None,
+                               landline=each['landline'] or None,
+                               mail=each['mail'] or None,
+                               mobile_phonenumber=each['mobile_phonenumber'] or None,
+                               customer_id=each['customer_id'] or None,
+                               pan=each['pan'] or None,
+                               customer_code=each['customer_code'] or None,
+                               short_name=each['short_name'] or None,
+                               credit_limit=each['credit_limit'] or None,
+                               state_code=each['state_code'] or None,
+                               gstin=each['gstin'] or None,
+                               depot=each['depot'] or None,
+                               designation=each['designation'] or None,
+                               mobile=each['mobile'] or None,
+                               depo_code=depo,
+                               customer_add1=each['customer_add1'] or None,
+                               customer_add2=each['customer_add2'] or None)
+                success_ids.append(each['id'])
+            except BaseException as ex:
+                print ex
+        if success_ids:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_customer = requests.post(url=sfa_urls.CUSTOMER_SYNC,
+                                          data={'sync_success_ids': json.dumps(
+                                              success_ids)},
+                                          headers=request_headers)
+            if not sync_customer.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_customer.status_code))
+    except BaseException as ex:
+        print ex
