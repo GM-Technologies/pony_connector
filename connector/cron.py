@@ -7,7 +7,8 @@ from django.conf import settings
 from django.db.models.query_utils import Q
 
 from connector import sfa_urls
-from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster
+from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster, \
+    OrderHeader, OrderDetails
 from connector.utils import get_paginated_objects
 
 
@@ -25,6 +26,9 @@ def data_sync():
     print "Customer sync initiated at {}".format(datetime.now())
     customer_sync()
     print "Customer sync completed at {}".format(datetime.now())
+    print "Order sync initiated at {}".format(datetime.now())
+    order_sync()
+    print "Order sync completed at {}".format(datetime.now())
 
 
 def product_sync():
@@ -253,3 +257,45 @@ def customer_sync():
                 raise Exception('{} response from SFA'.format(sync_customer.status_code))
     except BaseException as ex:
         print ex
+
+
+def order_sync():
+    unsynced_orders = list(OrderHeader.objects.filter(Q(Q(is_sync=False)
+                                                        | Q(orderdetails__is_sync=False))
+                                                      ).distinct())
+    synced = False
+    page = 1
+    per_page = 20
+    while not synced and len(unsynced_orders):
+        orders, pagination_info = get_paginated_objects(unsynced_orders, page, per_page)
+        order_data = [each.to_json() for each in orders]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_order = requests.post(url=sfa_urls.ORDER_SYNC,
+                                       data={'orders': json.dumps(order_data)},
+                                       headers=request_headers)
+            if not sync_order.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_order.status_code))
+            response = json.loads(sync_order.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    order = OrderHeader.objects.get(pk=each['id'])
+                    order.is_sync = each['is_sync']
+                    order.save(update_fields=['is_sync'])
+                    for detail in each['order_details']:
+                        try:
+                            order_detail = OrderDetails.objects.get(pk=detail['id'])
+                            order_detail.is_sync = detail['is_sync']
+                            order_detail.save(update_fields=['is_sync'])
+                        except BaseException as ex:
+                            print ex
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True

@@ -372,7 +372,7 @@ class OrderHeader(base_models.AuditModel):
             "sfa_order_number": str(self.sfa_order_number or ""),
             "order_date": str(self.order_date),
             "customer": self.customer_code.to_json() if customer_detail
-            else str(self.customer_code.customer_code),
+            else str(self.customer_code.customer_code or self.customer_code.sfa_temp_id),
             "depo": self.depo_code.to_json() if depo_detail
             else str(self.depo_code.depo_code),
             "customer_reference_number": self.customer_reference_number or "",
@@ -384,7 +384,8 @@ class OrderHeader(base_models.AuditModel):
             "discount": str(self.discount or ""),
             "order_value_rs": str(self.order_value_rs or ""),
             "shipped_date": str(self.shipped_date or ""),
-            "order_details": [each.to_json() for each in self.orderdetails_set.all()]
+            "order_details": [each.to_json() for each in self.orderdetails_set.all()],
+            "is_sync": self.is_sync
         }
 
 
@@ -431,7 +432,8 @@ class OrderDetails(base_models.AuditModel):
             "status": self.status or "",
             "amount": str(self.amount),
             "order_created_date": str(self.order_created_date or ""),
-            "order_detail_id": str(self.order_detail_id or "")
+            "order_detail_id": str(self.order_detail_id or ""),
+            "is_sync": self.is_sync
         }
 
 
