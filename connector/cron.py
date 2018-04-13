@@ -4,6 +4,7 @@ from datetime import datetime
 import kronos
 import requests
 from django.conf import settings
+from django.db import transaction
 from django.db.models.query_utils import Q
 
 from connector import sfa_urls
@@ -191,10 +192,15 @@ def customer_sync():
             try:
                 depo = DepoMaster.objects.get(depo_code=each['depo'])
                 try:
-                    customer = CustomerMaster.objects.get(Q(Q(customer_code=each['customer_code']) |
-                                                            Q(sfa_temp_id=each['sfa_temp_id'])),
-                                                          ~Q(customer_code=""),
-                                                          ~Q(sfa_temp_id=""))
+                    query = None
+                    if each['customer_code']:
+                        query = Q(customer_code=each['customer_code'])
+                    if each['sfa_temp_id']:
+                        if query:
+                            query |= Q(sfa_temp_id=each['sfa_temp_id'])
+                        else:
+                            query = Q(sfa_temp_id=each['sfa_temp_id'])
+                    customer = CustomerMaster.objects.get(query)
                     customer.depo_code = depo
                     customer.sfa_temp_id = each['sfa_temp_id'] or None
                     customer.customer_mail = each['customer_mail'] or None
@@ -299,3 +305,82 @@ def order_sync():
             page = pagination_info['next_page_number']()
         else:
             synced = True
+    try:
+        request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+        sync_order = requests.get(url=sfa_urls.ORDER_SYNC,
+                                     headers=request_headers)
+        if not sync_order.status_code == 200:
+            raise Exception('{} response from SFA'.format(sync_order.status_code))
+        response = json.loads(sync_order.content)
+        success_ids = []
+        for each in response:
+            if not each:
+                continue
+            try:
+                depo = DepoMaster.objects.get(depo_code=each['distributor'])
+                customer = CustomerMaster.objects.get(Q(Q(customer_code=each['retailer']) |
+                                                        Q(sfa_temp_id=each['retailer'])))
+                print json.dumps(each)
+                with transaction.atomic():
+                    try:
+                        order_header = OrderHeader.objects.get(
+                            Q(Q(Q(order_number=each['order_number']) &
+                              Q(order_date=each['order_date']))
+                              ) | Q(sfa_order_number=each['order_number']))
+                        order_header.order_date = each['order_date']
+                        order_header.depo_code = depo
+                        order_header.customer_code = customer
+                        order_header.is_sync = True
+                        order_header.save(update_fields=['order_date', 'depo_code',
+                                                         'customer_code', 'is_sync'])
+                    except OrderHeader.DoesNotExist:
+                        order_header = OrderHeader.objects.create(
+                            sfa_order_number=each['order_number'],
+                            order_date=each['order_date'],
+                            depo_code=depo,
+                            customer_code=customer,
+                            order_created_date=each['order_date'],
+                            status='Y',
+                            order_value=0,
+                            is_sync=True)
+                    total_price = 0
+                    for detail in each['details']:
+                        product = ProductMaster.objects.get(
+                            product_code=detail['part_number__part_number'])
+                        quantity = int(detail['quantity'])
+                        price = int(detail['line_total'])
+                        try:
+                            order_detail = OrderDetails.objects.get(order=order_header,
+                                                                    product_code=product)
+                            order_detail.order_date = each['order_date']
+                            order_detail.order_quantity = quantity
+                            order_detail.amount = price
+                            order_detail.order_created_date = each['order_date']
+                            order_detail.is_sync = True
+                            order_detail.save(update_fields=['order_date', 'order_created_date',
+                                                             'order_quantity', 'amount', 'is_sync'])
+                        except OrderDetails.DoesNotExist:
+                            OrderDetails.objects.create(
+                                order=order_header,
+                                product_code=product,
+                                order_date=each['order_date'],
+                                order_quantity=quantity,
+                                amount=price,
+                                order_created_date=each['order_date'],
+                                is_sync=True)
+                        total_price += price
+                    order_header.order_value = total_price
+                    order_header.save(update_fields=['order_value'])
+                    success_ids.append(each['id'])
+            except BaseException as ex:
+                print ex
+        if success_ids:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_customer = requests.post(url=sfa_urls.ORDER_SYNC,
+                                          data={'sync_success_ids': json.dumps(
+                                              success_ids)},
+                                          headers=request_headers)
+            if not sync_customer.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_customer.status_code))
+    except BaseException as ex:
+        print ex
