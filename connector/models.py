@@ -568,6 +568,7 @@ class InvoiceDetails(base_models.AuditModel):
     tax_amount = models.IntegerField(db_column='TAXAMT')
     net_amount = models.IntegerField(db_column='NETAMT')
     ret_quantity = models.IntegerField(db_column='RETQTY')
+    order = models.ForeignKey(OrderHeader, db_column='ORDID')
     order_number = models.IntegerField(db_column='ORDNO')
     order_date = models.DateField(db_column='ORDDT')
     total = models.IntegerField(db_column='TOT')
@@ -599,6 +600,9 @@ class InvoiceDetails(base_models.AuditModel):
             'tax_amount': str(self.tax_amount),
             'net_amount': str(self.net_amount),
             'ret_quantity': str(self.ret_quantity),
+            'order': {"order_number": str(self.order.order_number or ""),
+                      "sfa_order_number": str(self.order.sfa_order_number or ""),
+                      "order_date": str(self.order.order_date),},
             'order_number': str(self.order_number),
             'order_date': str(self.order_date),
             'total': str(self.total),
