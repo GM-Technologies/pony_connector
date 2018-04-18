@@ -363,7 +363,7 @@ class OrderHeader(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Order Header"
         db_table = "GCP_ST05_ORD_HDR"
-        unique_together = ['order_number', 'order_date']
+        unique_together = ['order_number', 'sfa_order_number', 'order_date']
 
     def to_json(self, customer_detail=False, depo_detail=False):
         return {
@@ -413,7 +413,7 @@ class OrderDetails(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Order Details"
         db_table = "GCP_ST06_ORD_DTL"
-        unique_together = ['order_number', 'order_date', 'product_code']
+        unique_together = ['order', 'product_code']
 
     def to_json(self, with_product=False):
         return {
@@ -479,7 +479,7 @@ class StockMaster(base_models.AuditModel):
 
 class InvoiceHeader(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
-    invoice_number = models.IntegerField(db_column='INVNO')
+    invoice_number = models.CharField(db_column='INVNO', max_length=15)
     invoice_date = models.DateField(db_column='INVDT')
     invoice_type = models.CharField(max_length=1, db_column='INVTYPE')
     allocation_number = models.IntegerField(db_column='ALLOCNO')
@@ -523,14 +523,14 @@ class InvoiceHeader(base_models.AuditModel):
             "id": str(self.id),
             "invoice_number": str(self.invoice_number),
             "invoice_date": str(self.invoice_date),
-            "invoice_type": self.invoice_date,
+            "invoice_type": self.invoice_type,
             "allocation_number": str(self.allocation_number),
             "allocation_date": str(self.allocation_date),
             "cancel": self.cancel,
             "depo": str(self.depo_code.depo_code),
             "bank_code": str(self.bank_code),
             "bank_document_date": str(self.bank_document_date),
-            "customer": str(self.customer_code.customer_code),
+            "customer": str(self.customer_code.customer_code or self.customer_code.sfa_temp_id),
             "balance_amount": str(self.balance_amount),
             "total": str(self.total),
             "total_discount": str(self.total_discount),
@@ -552,7 +552,8 @@ class InvoiceHeader(base_models.AuditModel):
             "total_sgst_amount": str(self.total_sgst_amount),
             "total_igst_amount": str(self.total_igst_amount),
             "invoice_gstin": self.invoice_gstin,
-            "invoice_details": [each.to_json() for each in self.invoicedetails_set.all()]
+            "invoice_details": [each.to_json() for each in self.invoicedetails_set.all()],
+            "is_sync": self.is_sync
         }
 
 
@@ -613,7 +614,8 @@ class InvoiceDetails(base_models.AuditModel):
             'igst_per': str(self.igst_per),
             'igst_amount': str(self.igst_amount),
             'item_type': self.item_type,
-            'tarrifid': str(self.tarrifid.tariff_id)
+            'tarrifid': str(self.tarrifid.tariff_id),
+            "is_sync": self.is_sync
         }
 
 

@@ -9,7 +9,7 @@ from django.db.models.query_utils import Q
 
 from connector import sfa_urls
 from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster, \
-    OrderHeader, OrderDetails
+    OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails
 from connector.utils import get_paginated_objects
 
 
@@ -30,6 +30,9 @@ def data_sync():
     print "Order sync initiated at {}".format(datetime.now())
     order_sync()
     print "Order sync completed at {}".format(datetime.now())
+    print "Invoice sync initiated at {}".format(datetime.now())
+    invoice_sync()
+    print "Invoice sync completed at {}".format(datetime.now())
 
 
 def product_sync():
@@ -384,3 +387,45 @@ def order_sync():
                 raise Exception('{} response from SFA'.format(sync_customer.status_code))
     except BaseException as ex:
         print ex
+
+
+def invoice_sync():
+    unsynced_invoices = list(InvoiceHeader.objects.filter(Q(Q(is_sync=False)
+                                                            | Q(invoicedetails__is_sync=False))
+                                                          ).distinct())
+    synced = False
+    page = 1
+    per_page = 20
+    while not synced and len(unsynced_invoices):
+        invoices, pagination_info = get_paginated_objects(unsynced_invoices, page, per_page)
+        invoice_data = [each.to_json() for each in invoices]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_invoice = requests.post(url=sfa_urls.INVOICE_SYNC,
+                                       data={'invoices': json.dumps(invoice_data)},
+                                       headers=request_headers)
+            if not sync_invoice.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_invoice.status_code))
+            response = json.loads(sync_invoice.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    invoice = InvoiceHeader.objects.get(pk=each['id'])
+                    invoice.is_sync = each['is_sync']
+                    invoice.save(update_fields=['is_sync'])
+                    for detail in each['invoice_details']:
+                        try:
+                            invoice_detail = InvoiceDetails.objects.get(pk=detail['id'])
+                            invoice_detail.is_sync = detail['is_sync']
+                            invoice_detail.save(update_fields=['is_sync'])
+                        except BaseException as ex:
+                            print ex
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
