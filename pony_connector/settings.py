@@ -135,9 +135,12 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static")
+]
 
-STATIC_ROOT = '/var/www/117.232.71.202/static/'
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static1')
 
 SFA_DOMAIN = os.environ.get('SFA_DOMAIN', 'http://localhost:8000')
 
