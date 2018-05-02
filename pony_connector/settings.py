@@ -77,17 +77,17 @@ WSGI_APPLICATION = 'pony_connector.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-# DB_NAME = os.environ.get('DB_NAME', 'niil')
-# DB_USER = os.environ.get('DB_USER', 'sales')
-# DB_HOST = os.environ.get('DB_HOST', 'vpn.ponyneedles.com')
-# DB_PORT = os.environ.get('DB_PORT', '1521')
-# DB_PASSWORD = os.environ.get('DB_PASSWORD', 'needles')
-
-DB_NAME = os.environ.get('DB_NAME', 'xe')
-DB_USER = os.environ.get('DB_USER', 'pony')
-DB_HOST = os.environ.get('DB_HOST', 'localhost')
+DB_NAME = os.environ.get('DB_NAME', 'niil')
+DB_USER = os.environ.get('DB_USER', 'sales')
+DB_HOST = os.environ.get('DB_HOST', 'vpn.ponyneedles.com')
 DB_PORT = os.environ.get('DB_PORT', '1521')
-DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'needles')
+
+# DB_NAME = os.environ.get('DB_NAME', 'xe')
+# DB_USER = os.environ.get('DB_USER', 'pony')
+# DB_HOST = os.environ.get('DB_HOST', 'localhost')
+# DB_PORT = os.environ.get('DB_PORT', '1521')
+# DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
 
 DATABASES = {
     'default': {
@@ -136,6 +136,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
+STATIC_ROOT = '/var/www/117.232.71.202/static/'
 STATIC_URL = '/static/'
 
 SFA_DOMAIN = os.environ.get('SFA_DOMAIN', 'http://localhost:8000')
