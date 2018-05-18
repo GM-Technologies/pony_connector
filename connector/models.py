@@ -72,9 +72,9 @@ class TariffHeader(base_models.AuditModel):
 
 class TariffMaster(base_models.AuditModel):
     tariff_id = models.IntegerField(primary_key=True, db_column='TARIFFID')
-    tariff_header = models.ForeignKey(TariffHeader, db_column='TARIFFHD')
+    tariff_header = models.CharField(max_length=100, null=True, db_column='TARIFFHD')
     description = models.CharField(max_length=80, db_column='TARIFF_DES')
-    hsn_code = models.CharField(max_length=8, db_column='HSNCODE')
+    hsn_code = models.CharField(max_length=10, db_column='HSNCODE')
     gst = models.DecimalField(max_digits=5, decimal_places=2, db_column='GSTPER')
 
     def __str__(self):
