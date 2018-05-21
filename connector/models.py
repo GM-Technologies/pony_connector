@@ -49,27 +49,6 @@ class ProductSubCategory(base_models.AuditModel):
         }
 
 
-class TariffHeader(base_models.AuditModel):
-    category = models.OneToOneField(ProductCategory, primary_key=True, db_column='GRPCODE')
-    name = models.CharField(max_length=150, db_column='GRPNAME')
-    type = models.CharField(max_length=2, db_column='GRPTYPE')
-
-    def __str__(self):
-        return "{}".format(self.name)
-
-    class Meta:
-        verbose_name_plural = "Tariff Header"
-        db_table = "GCP_SM27_TARIFF_HDR"
-
-    def to_json(self):
-        return {
-            "category": self.category.to_json(),
-            "name": self.name,
-            "type": self.type,
-            "is_sync": self.is_sync
-        }
-
-
 class TariffMaster(base_models.AuditModel):
     tariff_id = models.IntegerField(primary_key=True, db_column='TARIFFID')
     tariff_header = models.CharField(max_length=100, null=True, db_column='TARIFFHD')
@@ -87,7 +66,7 @@ class TariffMaster(base_models.AuditModel):
     def to_json(self):
         return {
             "tariff_id": str(self.tariff_id),
-            "tariff_header": self.tariff_header.to_json(),
+            "tariff_header": self.tariff_header or None,
             "description": self.description,
             "hsn_code": self.hsn_code,
             "gst": str(self.gst),
