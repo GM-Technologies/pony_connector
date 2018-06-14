@@ -82,7 +82,8 @@ class ProductMaster(base_models.AuditModel):
     count = models.IntegerField(db_column='PRODCNT', null=True)
     unit = models.CharField(max_length=5, db_column='UNIT')
     category = models.ForeignKey(ProductCategory, db_column='GRPCODE')
-    sub_category = models.ForeignKey(ProductSubCategory, db_column='SUBGRP')
+    sub_category_code = models.IntegerField(db_column='SUBGRP', null=True, blank=True)
+    sub_category = models.ForeignKey(ProductSubCategory, db_column='SUBGRPID')
     tariff = models.ForeignKey(TariffMaster, db_column='TARIFFID')
 
     def __str__(self):
