@@ -321,11 +321,12 @@ class CustomerMaster(base_models.AuditModel):
 
 
 class DepoSalesRep(base_models.AuditModel):
-    code = models.CharField(max_length=3, primary_key=True, db_column="CODE")
+    id = models.AutoField(primary_key=True, db_column='ID')
+    code = models.CharField(max_length=3, db_column="CODE")
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     name = models.CharField(max_length=50, db_column="NAME")
     mobile = models.CharField(max_length=15, db_column="MOBILE")
-    email_id = models.CharField(max_length=15, db_column="MAILID")
+    email_id = models.CharField(max_length=35, db_column="MAILID")
     active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -334,6 +335,8 @@ class DepoSalesRep(base_models.AuditModel):
     class Meta:
         verbose_name_plural = "Depo Sales Representatives"
         db_table = "GCP_SM05_FLD"
+        unique_together = ['code', 'depo_code']
+
 
 class OrderHeader(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
