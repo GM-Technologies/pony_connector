@@ -260,7 +260,8 @@ class CustomerMaster(base_models.AuditModel):
     customer_code = models.IntegerField(db_column='CUSTCODE', null=True, blank=True)
     sfa_temp_id = models.CharField(unique=True, max_length=50, db_column='TEMPID', null=True, blank=True)
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
-    market_code = models.ForeignKey(Market, db_column='MKTCODE', null=True, blank=True)
+    actual_market_code = models.IntegerField(db_column='MKTCODE', null=True, blank=True)
+    market_code = models.ForeignKey(Market, db_column='MKTCODEID', null=True, blank=True)
     customer_name = models.CharField(max_length=50, db_column='CUSTNAME')
     customer_add1 = models.CharField(max_length=55, db_column='CUSTADD1', null=True, blank=True)
     customer_add2 = models.CharField(max_length=55, db_column='CUSTADD2', null=True, blank=True)
@@ -336,6 +337,18 @@ class DepoSalesRep(base_models.AuditModel):
         verbose_name_plural = "Depo Sales Representatives"
         db_table = "GCP_SM05_FLD"
         unique_together = ['code', 'depo_code']
+
+    def to_json(self):
+        return {
+            "id": str(self.id),
+            "depo": self.depo_code.to_json(),
+            "dsr_code": self.code,
+            "name": self.name,
+            "mobile": self.mobile,
+            "email": self.email_id,
+            "active": self.active,
+            "is_sync": self.is_sync
+        }
 
 
 class OrderHeader(base_models.AuditModel):
