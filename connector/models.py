@@ -572,7 +572,7 @@ class InvoiceHeader(base_models.AuditModel):
 
 class InvoiceDetails(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
-    invoice_header = models.ForeignKey(InvoiceHeader, db_column='INVHDR')
+    invoice_header = models.ForeignKey(InvoiceHeader, db_column='INVHDRID')
     product_code = models.ForeignKey(ProductMaster, db_column='PRODCODE')
     product_quantity = models.IntegerField(db_column='PRODQTY')
     product_rate = models.FloatField(db_column='PRODRATE')
