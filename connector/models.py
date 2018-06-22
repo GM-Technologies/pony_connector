@@ -733,14 +733,15 @@ class CollectionDetails(base_models.AuditModel):
     bint = models.IntegerField(null=True, blank=True, db_column='BINT')
     othamt = models.FloatField(null=True, blank=True, db_column='OTHAMT')
     received_amount = models.FloatField(null=True, blank=True, db_column='RECDAMT')
-    invoice_code = models.ForeignKey(InvoiceHeader, null=True, blank=True, db_column='INVNO')
+    invoice_code = models.ForeignKey(InvoiceHeader, null=True, blank=True, db_column='INVNOID')
+    invoice_no = models.CharField(db_column='INVNO', max_length=15)
     tariff_id = models.ForeignKey(TariffMaster, null=True, blank=True, db_column='TARIFFID')
     cgst_per = models.FloatField(null=True, blank=True, db_column='CGSTPER')
     cgst_amount = models.FloatField(null=True, blank=True, db_column='CGSTAMT')
     sgst_per = models.FloatField(null=True, blank=True, db_column='SGSTPER')
     sgst_amount = models.FloatField(null=True, blank=True, db_column='SGSTAMT')
     igst_per = models.FloatField(null=True, blank=True, db_column='IGSTPER')
-    igst_amount = models.FloatField(null=True, blank=True, db_column='IGST')
+    igst_amount = models.FloatField(null=True, blank=True, db_column='IGSTAMT')
     total_tax_value = models.FloatField(null=True, blank=True, db_column='TAXABLE_VALUE')
 
     def __str__(self):
