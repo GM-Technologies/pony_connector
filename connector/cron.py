@@ -75,10 +75,10 @@ def product_sync():
                     sub_category = product.sub_category
                     sub_category.is_sync = each['sub_category']['is_sync']
                     sub_category.save(update_fields=['is_sync'])
-                    if each['price'].get('id'):
+                    if each['price'].get('id') and each['price'].get('is_sync'):
                         price = product.price_set.all().get(id=each['price'].get('id'))
-                        price.is_sync = each['is_sync']
-                        price.save(update_fields=['is_sync'])
+                        product.price_set.filter(with_effect_from__lte=price.with_effect_from
+                                                 ).update(is_sync=True)
                 except BaseException as ex:
                     print ex
         except BaseException as ex:
