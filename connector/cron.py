@@ -9,7 +9,7 @@ from django.db.models.query_utils import Q
 
 from connector import sfa_urls
 from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster, \
-    OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails
+    OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails, CollectionHeader, DepoSalesRep
 from connector.utils import get_paginated_objects
 
 
@@ -24,6 +24,9 @@ def data_sync():
     print "Depo sync initiated at {}".format(datetime.now())
     depo_sync()
     print "Depo sync completed at {}".format(datetime.now())
+    print "DSR sync initiated at {}".format(datetime.now())
+    dsr_sync()
+    print "DSR sync completed at {}".format(datetime.now())
     print "Customer sync initiated at {}".format(datetime.now())
     customer_sync()
     print "Customer sync completed at {}".format(datetime.now())
@@ -56,6 +59,8 @@ def product_sync():
             sync_product = requests.post(url=sfa_urls.PRODUCT_SYNC,
                                          data={'products': json.dumps(product_data)},
                                          headers=request_headers)
+            if not sync_product.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_product.status_code))
             response = json.loads(sync_product.content)
             for each in response:
                 if not each:
@@ -65,14 +70,15 @@ def product_sync():
                     product.is_sync = each['is_sync']
                     product.save(update_fields=['is_sync'])
                     category = product.category
-                    category.is_sync = each['is_sync']
+                    category.is_sync = each['category']['is_sync']
                     category.save(update_fields=['is_sync'])
                     sub_category = product.sub_category
-                    sub_category.is_sync = each['is_sync']
+                    sub_category.is_sync = each['sub_category']['is_sync']
                     sub_category.save(update_fields=['is_sync'])
-                    price = product.price_set.all().get(id=each['price'].get('id'))
-                    price.is_sync = each['is_sync']
-                    price.save(update_fields=['is_sync'])
+                    if each['price'].get('id'):
+                        price = product.price_set.all().get(id=each['price'].get('id'))
+                        price.is_sync = each['is_sync']
+                        price.save(update_fields=['is_sync'])
                 except BaseException as ex:
                     print ex
         except BaseException as ex:
@@ -139,6 +145,39 @@ def depo_sync():
                     depo = DepoMaster.objects.get(depo_code=each['depo_code'])
                     depo.is_sync = each['is_sync']
                     depo.save(update_fields=['is_sync'])
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
+
+
+def dsr_sync():
+    unsynced_dsrs = list(DepoSalesRep.objects.filter(is_sync=False))
+    synced = False
+    page = 1
+    per_page = 50
+    while not synced and len(unsynced_dsrs):
+        dsrs, pagination_info = get_paginated_objects(unsynced_dsrs, page, per_page)
+        dsr_data = [each.to_json() for each in dsrs]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_dsr = requests.post(url=sfa_urls.DSR_SYNC,
+                                      data={'dsrs': json.dumps(dsr_data)},
+                                      headers=request_headers)
+            if not sync_dsr.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_dsr.status_code))
+            response = json.loads(sync_dsr.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    dsr = DepoSalesRep.objects.get(pk=each['id'])
+                    dsr.is_sync = each['is_sync']
+                    dsr.save(update_fields=['is_sync'])
                 except BaseException as ex:
                     print ex
         except BaseException as ex:
@@ -429,3 +468,124 @@ def invoice_sync():
             page = pagination_info['next_page_number']()
         else:
             synced = True
+
+#
+# def collection_sync():
+#     unsynced_collections = list(CollectionHeader.objects.filter(Q(Q(is_sync=False)
+#                                                         | Q(collectiondetails__is_sync=False))
+#                                                       ).distinct())
+#     synced = False
+#     page = 1
+#     per_page = 20
+#     while not synced and len(unsynced_collections):
+#         collections, pagination_info = get_paginated_objects(unsynced_collections, page, per_page)
+#         collection_data = [each.to_json() for each in collections]
+#         try:
+#             request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+#             sync_collection = requests.post(url=sfa_urls.COLLECTION_SYNC,
+#                                        data={'collections': json.dumps(collection_data)},
+#                                        headers=request_headers)
+#             if not sync_collection.status_code == 200:
+#                 raise Exception('{} response from SFA'.format(sync_collection.status_code))
+#             response = json.loads(sync_collection.content)
+#             for each in response:
+#                 if not each:
+#                     continue
+#                 try:
+#                     collection = CollectionHeader.objects.get(pk=each['id'])
+#                     collection.is_sync = each['is_sync']
+#                     collection.save(update_fields=['is_sync'])
+#                     for detail in each['collection_details']:
+#                         try:
+#                             order_detail = OrderDetails.objects.get(pk=detail['id'])
+#                             order_detail.is_sync = detail['is_sync']
+#                             order_detail.save(update_fields=['is_sync'])
+#                         except BaseException as ex:
+#                             print ex
+#                 except BaseException as ex:
+#                     print ex
+#         except BaseException as ex:
+#             print ex
+#         if pagination_info['has_next']():
+#             page = pagination_info['next_page_number']()
+#         else:
+#             synced = True
+#     try:
+#         request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+#         sync_order = requests.get(url=sfa_urls.ORDER_SYNC,
+#                                      headers=request_headers)
+#         if not sync_order.status_code == 200:
+#             raise Exception('{} response from SFA'.format(sync_order.status_code))
+#         response = json.loads(sync_order.content)
+#         success_ids = []
+#         for each in response:
+#             if not each:
+#                 continue
+#             try:
+#                 depo = DepoMaster.objects.get(depo_code=each['distributor'])
+#                 customer = CustomerMaster.objects.get(Q(Q(customer_code=each['retailer']) |
+#                                                         Q(sfa_temp_id=each['retailer'])))
+#                 print json.dumps(each)
+#                 with transaction.atomic():
+#                     try:
+#                         order_header = OrderHeader.objects.get(
+#                             Q(Q(Q(order_number=each['order_number']) &
+#                               Q(order_date=each['order_date']))
+#                               ) | Q(sfa_order_number=each['order_number']))
+#                         order_header.order_date = each['collection_date']
+#                         collection_header.depo_code = depo
+#                         collection_header.customer_code = customer
+#                         collection_header.is_sync = True
+#                         collection_header.save(update_fields=['collection_date', 'depo_code',
+#                                                          'customer_code', 'is_sync'])
+#                     except OrderHeader.DoesNotExist:
+#                         order_header = OrderHeader.objects.create(
+#                             sfa_order_number=each['order_number'],
+#                             order_date=each['order_date'],
+#                             depo_code=depo,
+#                             customer_code=customer,
+#                             order_created_date=each['order_date'],
+#                             status='Y',
+#                             order_value=0,
+#                             is_sync=True)
+#                     total_price = 0
+#                     for detail in each['details']:
+#                         product = ProductMaster.objects.get(
+#                             product_code=detail['part_number__part_number'])
+#                         quantity = int(detail['quantity'])
+#                         price = int(detail['line_total'])
+#                         try:
+#                             order_detail = OrderDetails.objects.get(order=order_header,
+#                                                                     product_code=product)
+#                             order_detail.order_date = each['order_date']
+#                             order_detail.order_quantity = quantity
+#                             order_detail.amount = price
+#                             order_detail.order_created_date = each['order_date']
+#                             order_detail.is_sync = True
+#                             order_detail.save(update_fields=['order_date', 'order_created_date',
+#                                                              'order_quantity', 'amount', 'is_sync'])
+#                         except OrderDetails.DoesNotExist:
+#                             OrderDetails.objects.create(
+#                                 order=order_header,
+#                                 product_code=product,
+#                                 order_date=each['order_date'],
+#                                 order_quantity=quantity,
+#                                 amount=price,
+#                                 order_created_date=each['order_date'],
+#                                 is_sync=True)
+#                         total_price += price
+#                     order_header.order_value = total_price
+#                     order_header.save(update_fields=['order_value'])
+#                     success_ids.append(each['id'])
+#             except BaseException as ex:
+#                 print ex
+#         if success_ids:
+#             request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+#             sync_customer = requests.post(url=sfa_urls.ORDER_SYNC,
+#                                           data={'sync_success_ids': json.dumps(
+#                                               success_ids)},
+#                                           headers=request_headers)
+#             if not sync_customer.status_code == 200:
+#                 raise Exception('{} response from SFA'.format(sync_customer.status_code))
+#     except BaseException as ex:
+#         print ex
