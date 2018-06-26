@@ -142,6 +142,6 @@ STATICFILES_DIRS = [
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static1')
 
-SFA_DOMAIN = os.environ.get('SFA_DOMAIN', 'http://localhost:8000')
+SFA_DOMAIN = os.environ.get('SFA_DOMAIN', 'http://pony.gladminds.co')
 
-SFA_TOKEN = os.environ.get('SFA_TOKEN', '7fe724c1d17dcff698d919e1c9422a0a58c09720')
+SFA_TOKEN = os.environ.get('SFA_TOKEN', 'a9e4d62401b2f5664e435ff77ee7c1110910d91d')
