@@ -328,7 +328,7 @@ class DepoSalesRep(base_models.AuditModel):
     name = models.CharField(max_length=50, db_column="NAME")
     mobile = models.CharField(max_length=15, db_column="MOBILE")
     email_id = models.CharField(max_length=35, db_column="MAILID")
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=1)
 
     def __str__(self):
         return "{}".format(self.code)

@@ -17,7 +17,7 @@ class AuditModel(models.Model):
                                     related_name="modified_%(class)s_set",
                                     null=True,
                                     blank=True, db_column='DJMODIFIEDBY')
-    is_sync = models.BooleanField(default=False, db_column="ISSYNC")
+    is_sync = models.BooleanField(default=0, db_column="ISSYNC")
 
     class Meta:
         abstract = True
