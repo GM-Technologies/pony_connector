@@ -156,7 +156,7 @@ def depo_sync():
 
 
 def dsr_sync():
-    unsynced_dsrs = list(DepoSalesRep.objects.filter(is_sync=False))
+    unsynced_dsrs = list(DepoSalesRep.objects.filter(is_sync=False, mobile__isnull=False))
     synced = False
     page = 1
     per_page = 50
