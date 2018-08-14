@@ -9,7 +9,7 @@ from django.db.models.query_utils import Q
 
 from connector import sfa_urls
 from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster, \
-    OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails, CollectionHeader, DepoSalesRep
+    OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails, CollectionHeader, DepoSalesRep, StockMaster
 from connector.utils import get_paginated_objects
 
 
@@ -305,6 +305,47 @@ def customer_sync():
                 raise Exception('{} response from SFA'.format(sync_customer.status_code))
     except BaseException as ex:
         print ex
+
+
+def stock_sync():
+    unsynced_stocks = list(StockMaster.objects.filter(
+        is_sync=False).select_related('product_code', 'depo_code'))
+    synced = False
+    page = 1
+    per_page = 100
+    while not synced and len(unsynced_stocks):
+        stocks, pagination_info = get_paginated_objects(unsynced_stocks, page, per_page)
+        stock_data = [each.to_json() for each in stocks]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_stock = requests.post(url=sfa_urls.STOCK_SYNC,
+                                      data={'stocks': json.dumps(stock_data)},
+                                      headers=request_headers)
+            if not sync_stock.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_stock.status_code))
+            response = json.loads(sync_stock.content)
+            true_pks = []
+            false_pks = []
+            for each in response:
+                if not each:
+                    continue
+                elif each.get('is_sync') in [True, 1]:
+                    true_pks.append(each['id'])
+                elif each.get('is_sync') in [False, 0]:
+                    false_pks.append(each['id'])
+            try:
+                stock = StockMaster.objects.filter(pk__in=true_pks)
+                stock.update(is_sync=True)
+                stock = StockMaster.objects.filter(pk__in=false_pks)
+                stock.update(is_sync=False)
+            except BaseException as ex:
+                print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
 
 
 def order_sync():

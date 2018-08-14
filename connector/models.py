@@ -485,7 +485,8 @@ class StockMaster(base_models.AuditModel):
             "quantity_received": str(self.quantity_received),
             "all_quantity": str(self.all_quantity),
             "clear_stock": str(self.clear_stock),
-            "free_stock": str(self.free_stock)
+            "free_stock": str(self.free_stock),
+            "is_sync": self.is_sync
         }
 
 
