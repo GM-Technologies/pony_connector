@@ -13,6 +13,7 @@ from connector.models import ProductMaster, DivisionMaster, DepoMaster, Customer
 from connector.utils import get_paginated_objects
 
 
+# see https://github.com/jgorset/django-kronos for documentation
 @kronos.register('*/5 * * * *')
 def data_sync():
     print "Product sync initiated at {}".format(datetime.now())
