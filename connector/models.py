@@ -257,7 +257,7 @@ class Market(base_models.AuditModel):
 
 class CustomerMaster(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
-    customer_code = models.IntegerField(db_column='CUSTCODE', null=True, blank=True)
+    customer_code = models.IntegerField(unique=True, db_column='CUSTCODE', null=True, blank=True)
     sfa_temp_id = models.CharField(unique=True, max_length=50, db_column='TEMPID', null=True, blank=True)
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     actual_market_code = models.IntegerField(db_column='MKTCODE', null=True, blank=True)
@@ -353,7 +353,7 @@ class DepoSalesRep(base_models.AuditModel):
 
 class OrderHeader(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
-    order_number = models.IntegerField(null=True, blank=True, db_column='OPNO')
+    order_number = models.IntegerField(null=False, blank=True, db_column='OPNO', default=0)
     sfa_order_number = models.CharField(max_length=100, null=True, blank=True, db_column='SFAOPNO')
     order_date = models.DateField(db_column='OPDT')
     customer_code = models.ForeignKey(CustomerMaster, db_column='CUSTCODEID')
@@ -404,7 +404,7 @@ class OrderHeader(base_models.AuditModel):
 class OrderDetails(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
     order = models.ForeignKey(OrderHeader, db_column='ORDID')
-    order_number = models.IntegerField(null=True, blank=True, db_column='OPNO')
+    order_number = models.IntegerField(null=False, blank=True, db_column='OPNO', default=0)
     order_date = models.DateField(db_column='OPDT')
     product_code = models.ForeignKey(ProductMaster, db_column='PRODCODE')
     order_quantity = models.IntegerField(db_column='ORDQTY')
@@ -418,6 +418,7 @@ class OrderDetails(base_models.AuditModel):
     amount = models.FloatField(db_column='AMOUNT')
     order_created_date = models.DateField(null=True, blank=True, db_column='CRETDATE')
     order_detail_id = models.IntegerField(null=True, blank=True, db_column='OPDTLID')
+    ware_house_qty = models.IntegerField(null=True, blank=True, db_column='WH_TRFQTY')
 
     def __str__(self):
         return "{} - {}".format(self.order, self.product_code)
@@ -445,6 +446,7 @@ class OrderDetails(base_models.AuditModel):
             "amount": str(self.amount),
             "order_created_date": str(self.order_created_date or ""),
             "order_detail_id": str(self.order_detail_id or ""),
+            "ware_house_qty": str(self.ware_house_qty or ""),
             "is_sync": self.is_sync
         }
 
@@ -637,9 +639,9 @@ class CollectionHeader(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
     sfa_receipt_id = models.IntegerField(null=True, blank=True, db_column='SFAID')
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
-    rmasid = models.IntegerField(null=True, blank=True, db_column='RMASID')
+    rmasid = models.IntegerField(null=False, blank=True, db_column='RMASID', default=0)
     sl_no = models.IntegerField(null=True, blank=True, db_column='SLNO')
-    receipt_number = models.IntegerField(null=True, blank=True, db_column='RECPTNO')
+    receipt_number = models.IntegerField(null=False, blank=True, db_column='RECPTNO', default=0)
     receipt_date = models.DateField(db_column='RECPTDT')
     m_receipt_number = models.IntegerField(null=True, blank=True, db_column='MRECPTNO')
     m_receipt_date = models.DateField(null=True, blank=True, db_column='MRECPTDT')
@@ -725,17 +727,17 @@ class CollectionDetails(base_models.AuditModel):
     id = models.AutoField(primary_key=True, db_column='ID')
     collection = models.ForeignKey(CollectionHeader, db_column='COLHDRID')
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
-    dtlid = models.IntegerField(null=True, blank=True, db_column='DTLID')
-    rmasid = models.IntegerField(null=True, blank=True, db_column='RMASID')
-    receipt_number = models.IntegerField(null=True, blank=True, db_column='RECPTNO')
-    invoice_id = models.IntegerField(null=True, blank=True, db_column='INVID')
+    dtlid = models.IntegerField(null=False, blank=True, db_column='DTLID', default=0)
+    rmasid = models.IntegerField(null=False, blank=True, db_column='RMASID',default=0)
+    receipt_number = models.IntegerField(null=False, blank=True, db_column='RECPTNO', default=0)
+    invoice_id = models.IntegerField(null=False, blank=True, db_column='INVID', default=0)
     gl_code = models.IntegerField(null=True, blank=True, db_column='GLCODE')
     bcgs = models.IntegerField(null=True, blank=True, db_column='BCGS')
     bint = models.IntegerField(null=True, blank=True, db_column='BINT')
     othamt = models.FloatField(null=True, blank=True, db_column='OTHAMT')
     received_amount = models.FloatField(null=True, blank=True, db_column='RECDAMT')
     invoice_code = models.ForeignKey(InvoiceHeader, null=True, blank=True, db_column='INVNOID')
-    invoice_no = models.CharField(db_column='INVNO', max_length=15)
+    invoice_no = models.CharField(null=False,db_column='INVNO', max_length=15, default=0)
     tariff_id = models.ForeignKey(TariffMaster, null=True, blank=True, db_column='TARIFFID')
     cgst_per = models.FloatField(null=True, blank=True, db_column='CGSTPER')
     cgst_amount = models.FloatField(null=True, blank=True, db_column='CGSTAMT')
