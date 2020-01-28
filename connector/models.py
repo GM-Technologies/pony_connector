@@ -457,12 +457,12 @@ class StockMaster(base_models.AuditModel):
     month = models.DateField(db_column='MONTH')
     depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
     stock_flag = models.CharField(max_length=1, db_column='STKFLG')
-    op_number = models.IntegerField(db_column='OPNO')
+    op_number = models.FloatField(db_column='OPNO')
     op_date = models.DateField(db_column='OPDT')
-    op_stock = models.IntegerField(db_column='OPSTK')
+    op_stock = models.FloatField(db_column='OPSTK')
     quantity_received = models.IntegerField(db_column='QTYRECD')
-    all_quantity = models.IntegerField(db_column='ALLQTY')
-    clear_stock = models.IntegerField(db_column='CLSTK')
+    all_quantity = models.FloatField(db_column='ALLQTY')
+    clear_stock = models.FloatField(db_column='CLSTK')
     free_stock = models.IntegerField(db_column='FREESTOCK')
 
     def __str__(self):
