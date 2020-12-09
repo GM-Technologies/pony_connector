@@ -9,7 +9,8 @@ from django.db.models.query_utils import Q
 
 from connector import sfa_urls
 from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster, \
-    OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails, CollectionHeader, DepoSalesRep, StockMaster
+    OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails, CollectionHeader, DepoSalesRep, StockMaster,\
+    CollectionDetails
 from connector.utils import get_paginated_objects
 
 
@@ -514,7 +515,44 @@ def invoice_sync():
         else:
             synced = True
 
-#
-# def collection_sync():
-#    pass
-#    to be implemented
+
+def collection_sync():
+    unsynced_collections = list(CollectionHeader.objects.filter(Q(Q(is_sync=False)
+                                                            | Q(collectiondetails__is_sync=False))
+                                                          ).distinct())
+    synced = False
+    page = 1
+    per_page = 20
+    while not synced and len(unsynced_collections):
+        collections, pagination_info = get_paginated_objects(unsynced_collections, page, per_page)
+        collection_data = [each.to_json() for each in collections]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_collection = requests.post(url=sfa_urls.COLLECTION_SYNC,
+                                         data={'collections': json.dumps(collection_data)},
+                                         headers=request_headers)
+            if not sync_collection.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_collection.status_code))
+            response = json.loads(sync_collection.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    collection = CollectionHeader.objects.get(pk=each['id'])
+                    collection.is_sync = each['is_sync']
+                    collection.save(update_fields=['is_sync'])
+                    for detail in each['collection_details']:
+                        try:
+                            collection_detail = CollectionDetails.objects.get(pk=detail['id'])
+                            collection_detail.is_sync = detail['is_sync']
+                            collection_detail.save(update_fields=['is_sync'])
+                        except BaseException as ex:
+                            print ex
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True

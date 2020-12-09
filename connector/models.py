@@ -708,7 +708,7 @@ class CollectionHeader(base_models.AuditModel):
             'bcgs_code': str(self.bcgs_code or ""),
             'bint_code': str(self.bint_code or ""),
             'deposit_flag': str(self.deposit_flag or ""),
-            'bonus_flag': str(self.bonus_flag or ""),
+            'bounce_flag': str(self.bonus_flag or ""),
             'round_plus': str(self.round_plus or ""),
             'round_minus': str(self.round_minus or ""),
             'c_flag': str(self.c_flag or ""),
@@ -719,7 +719,9 @@ class CollectionHeader(base_models.AuditModel):
             'place_supply': self.place_supply or "",
             'courier_charges': str(self.courier_charges or ""),
             'inter_state': self.inter_state or "",
-            'clearing_flag': str(self.clearing_flag or "")
+            'clearing_flag': str(self.clearing_flag or ""),
+            "collection_details": [each.to_json() for each in self.collectiondetails_set.all()],
+            "is_sync": self.is_sync
         }
 
 
@@ -767,7 +769,7 @@ class CollectionDetails(base_models.AuditModel):
             'bint': str(self.bint or ""),
             'othamt': str(self.othamt or ""),
             'received_amount': str(self.received_amount or ""),
-            'invoice_code': str(self.invoice_code.id if self.invoice_code else ""),
+            'invoice_number': str(self.invoice_code.invoice_number if self.invoice_code else ""),
             'tarif_id': str(self.tariff_id.tariff_id if self.tariff_id else ""),
             'cgst_per': str(self.cgst_per or ""),
             'cgst_amount': str(self.cgst_amount or ""),
@@ -775,5 +777,6 @@ class CollectionDetails(base_models.AuditModel):
             'sgst_amount': str(self.sgst_amount or ""),
             'igst_per': str(self.igst_per or ""),
             'igst_amount': str(self.igst_amount or ""),
-            'total_tax_value': str(self.total_tax_value or "")
+            'total_tax_value': str(self.total_tax_value or ""),
+            "is_sync": self.is_sync
         }
