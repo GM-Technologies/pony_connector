@@ -722,8 +722,9 @@ class CollectionHeader(base_models.AuditModel):
             'courier_charges': str(self.courier_charges or ""),
             'inter_state': self.inter_state or "",
             'clearing_flag': str(self.clearing_flag or ""),
-            "collection_details": [each.to_json() for each in self.collectiondetails_set.all()],
-            "is_sync": self.is_sync
+            'collection_details': [each.to_json() for each in self.collectiondetails_set.all()],
+            'payment_adjustments': [each.to_json() for each in self.paymentadjustments_set.all()],
+            'is_sync': self.is_sync
         }
 
 
@@ -782,3 +783,46 @@ class CollectionDetails(base_models.AuditModel):
             'total_tax_value': str(self.total_tax_value or ""),
             "is_sync": self.is_sync
         }
+
+
+class PaymentAdjustmentDetails(base_models.AuditModel):
+    id = models.AutoField(primary_key=True, db_column='ID')
+    invoice_no = models.CharField(null=False,db_column='INVNO', max_length=15, default=0)
+    invoice_date = models.DateField(db_column='INVDT')
+    adjusted_amount = models.FloatField(null=True, blank=True, db_column='ADJAMT')
+    customer_code = models.IntegerField(db_column='CUSTCODE', null=True, blank=True)
+    is_adjusted = models.CharField(null=True, blank=True, max_length=1, db_column='ADJUST')
+    adjust_type = models.CharField(null=True, blank=True, max_length=4, db_column='ADJTYPE')
+    doc_number = models.CharField(null=True, blank=True, max_length=10, db_column='DOCNUM')
+    doc_date = models.DateField(null=True, blank=True, db_column='DOCDT')
+    doc_amount = models.FloatField(null=True, blank=True, db_column='DOCAMT')
+    alloc_number = models.IntegerField(null=False, blank=True, db_column='ALLOCNO', default=0)
+    alloc_date = models.DateField(null=True, blank=True, db_column='ALLOCDT')
+
+    def __str__(self):
+        return "{} - {}".format(self.invoice_no, self.adjusted_amount)
+
+    class Meta:
+        verbose_name_plural = "Payment Adjustments"
+        db_table = "GCP_ST21_ALL_ADJ"
+
+    def to_json(self):
+        return {
+            'id': str(self.id),
+            'invoice_no': str(self.invoice_no or ""),
+            'invoice_date': str(self.invoice_date or ""),
+            'adjusted_amount': self.adjusted_amount or 0,
+            'adjust_type': self.adjust_type or "",
+            'customer_code': str(self.customer_code or ""),
+            'doc_number': self.doc_number or "",
+            'doc_date': str(self.doc_date or ""),
+            'doc_amount': str(self.doc_amount or ""),
+            'alloc_number': str(self.alloc_number or ""),
+            'alloc_date': str(self.doc_date or ""),
+            'is_adjusted': str(self.is_adjusted or ""),
+            'is_sync': self.is_sync
+        }
+
+
+
+

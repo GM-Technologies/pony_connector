@@ -10,7 +10,7 @@ from django.db.models.query_utils import Q
 from connector import sfa_urls
 from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster, \
     OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails, CollectionHeader, DepoSalesRep, StockMaster,\
-    CollectionDetails
+    CollectionDetails, PaymentAdjustmentDetails
 from connector.utils import get_paginated_objects
 
 
@@ -548,6 +548,13 @@ def collection_sync():
                             collection_detail.save(update_fields=['is_sync'])
                         except BaseException as ex:
                             print ex
+                    for detail in each['payment_adjustments']:
+                        try:
+                            adjustment_detail = PaymentAdjustmentDetails.objects.get(pk=detail['id'])
+                            adjustment_detail.is_sync = detail['is_sync']
+                            adjustment_detail.save(update_fields=['is_sync'])
+                        except BaseException as ex:
+                            print "Exception Occured in Payment Adjustment: {}".format(ex)
                 except BaseException as ex:
                     print ex
         except BaseException as ex:
