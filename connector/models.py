@@ -723,7 +723,7 @@ class CollectionHeader(base_models.AuditModel):
             'inter_state': self.inter_state or "",
             'clearing_flag': str(self.clearing_flag or ""),
             'collection_details': [each.to_json() for each in self.collectiondetails_set.all()],
-            'payment_adjustments': [each.to_json() for each in self.paymentadjustments_set.all()],
+            'payment_adjustments': [each.to_json() for each in self.paymentadjustmentdetails_set.all()],
             'is_sync': self.is_sync
         }
 
@@ -793,7 +793,7 @@ class PaymentAdjustmentDetails(base_models.AuditModel):
     customer_code = models.IntegerField(db_column='CUSTCODE', null=True, blank=True)
     is_adjusted = models.CharField(null=True, blank=True, max_length=1, db_column='ADJUST')
     adjust_type = models.CharField(null=True, blank=True, max_length=4, db_column='ADJTYPE')
-    doc_number = models.CharField(null=True, blank=True, max_length=10, db_column='DOCNUM')
+    doc_number = models.ForeignKey(CollectionHeader, null=True, blank=True, db_column='DOCNUM')
     doc_date = models.DateField(null=True, blank=True, db_column='DOCDT')
     doc_amount = models.FloatField(null=True, blank=True, db_column='DOCAMT')
     alloc_number = models.IntegerField(null=True, blank=True, db_column='ALLOCNO', default=0)
