@@ -526,7 +526,7 @@ class InvoiceHeader(base_models.AuditModel):
     total_sgst_amount = models.FloatField(db_column='TOT_SGSTAMT')
     total_igst_amount = models.FloatField(db_column='TOT_IGSTAMT')
     invoice_gstin = models.CharField(max_length=15, db_column='INV_GSTIN', null=True, blank=True)
-    close_flag = models.IntegerField(null=True, blank=True, db_column='CFLAG', default=0)
+    close_flag = models.IntegerField(blank=True, db_column='CFLAG', default=0)
 
     def __str__(self):
         return "{}".format(self.invoice_number)
@@ -796,7 +796,7 @@ class PaymentAdjustmentDetails(base_models.AuditModel):
     doc_number = models.ForeignKey(CollectionHeader, null=True, blank=True, db_column='DOCNUM')
     doc_date = models.DateField(null=True, blank=True, db_column='DOCDT')
     doc_amount = models.FloatField(null=True, blank=True, db_column='DOCAMT')
-    alloc_number = models.IntegerField(null=True, blank=True, db_column='ALLOCNO', default=0)
+    alloc_number = models.IntegerField(blank=True, db_column='ALLOCNO', default=0)
     alloc_date = models.DateField(null=True, blank=True, db_column='ALLOCDT')
 
     def __str__(self):
@@ -814,7 +814,7 @@ class PaymentAdjustmentDetails(base_models.AuditModel):
             'adjusted_amount': self.adjusted_amount or 0,
             'adjust_type': self.adjust_type or "",
             'customer_code': str(self.customer_code or ""),
-            'doc_number': self.doc_number or "",
+            'doc_number': str(self.doc_number.receipt_number if self.doc_number else ""),
             'doc_date': str(self.doc_date or ""),
             'doc_amount': str(self.doc_amount or ""),
             'alloc_number': str(self.alloc_number or ""),
