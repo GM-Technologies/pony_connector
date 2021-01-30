@@ -789,4 +789,9 @@ class Migration(migrations.Migration):
             name='collectionheader',
             unique_together=set([('depo_code', 'receipt_number', 'sfa_receipt_id')]),
         ),
+        migrations.AddField(
+            model_name='invoiceheader',
+            name='close_flag',
+            field=models.IntegerField(blank=True, db_column='CFLAG', default=0),
+        ),
     ]
