@@ -41,7 +41,12 @@ def data_sync():
     print "Stock sync initiated at {}".format(datetime.now())
     stock_sync()
     print "Stock sync completed at {}".format(datetime.now())
-
+    print "Collection sync initiated at {}".format(datetime.now())
+    collection_sync()
+    print "Collection sync completed at {}".format(datetime.now())
+    print "Payment Adjustment sync initiated at {}".format(datetime.now())
+    payment_adjustment_sync()
+    print "Payment Adjustment sync completed at {}".format(datetime.now())
 
 def product_sync():
     unsynced_products = list(ProductMaster.objects.filter(
@@ -408,7 +413,7 @@ def order_sync():
                 depo = DepoMaster.objects.get(depo_code=each['distributor'])
                 customer = CustomerMaster.objects.get(Q(Q(customer_code=each['retailer']) |
                                                         Q(sfa_temp_id=each['retailer'])))
-                print json.dumps(each)
+                #print json.dumps(each)
                 with transaction.atomic():
                     try:
                         order_header = OrderHeader.objects.get(
@@ -548,13 +553,39 @@ def collection_sync():
                             collection_detail.save(update_fields=['is_sync'])
                         except BaseException as ex:
                             print ex
-                    for detail in each['payment_adjustments']:
-                        try:
-                            adjustment_detail = PaymentAdjustmentDetails.objects.get(pk=detail['id'])
-                            adjustment_detail.is_sync = detail['is_sync']
-                            adjustment_detail.save(update_fields=['is_sync'])
-                        except BaseException as ex:
-                            print "Exception Occured in Payment Adjustment: {}".format(ex)
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
+
+
+def payment_adjustment_sync():
+    unsynced_paymentadj = list(PaymentAdjustmentDetails.objects.filter(is_sync=False))
+    synced = False
+    page = 1
+    per_page = 50
+    while not synced and len(unsynced_paymentadj):
+        paymentadjs, pagination_info = get_paginated_objects(unsynced_paymentadj, page, per_page)
+        paymentadj_data = [each.to_json() for each in paymentadjs]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_paymentadj = requests.post(url=sfa_urls.DIVISION_SYNC,
+                                          data={'paymentadjs': json.dumps(paymentadj_data)},
+                                          headers=request_headers)
+            if not sync_paymentadj.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_paymentadj.status_code))
+            response = json.loads(sync_paymentadj.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    paymentadj = PaymentAdjustmentDetails.objects.get(pk=each['id'])
+                    paymentadj.is_sync = each['is_sync']
+                    paymentadj.save(update_fields=['is_sync'])
                 except BaseException as ex:
                     print ex
         except BaseException as ex:

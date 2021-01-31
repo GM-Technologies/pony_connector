@@ -723,7 +723,6 @@ class CollectionHeader(base_models.AuditModel):
             'inter_state': self.inter_state or "",
             'clearing_flag': str(self.clearing_flag or ""),
             'collection_details': [each.to_json() for each in self.collectiondetails_set.all()],
-            'payment_adjustments': [each.to_json() for each in self.paymentadjustmentdetails_set.all()],
             'is_sync': self.is_sync
         }
 
