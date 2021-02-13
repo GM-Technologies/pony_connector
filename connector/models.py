@@ -825,5 +825,49 @@ class PaymentAdjustmentDetails(base_models.AuditModel):
         }
 
 
+class NationalPaymentPendingView(models.Model):
+    id = models.AutoField(primary_key=True, db_column='ID')
+    customer = models.IntegerField(null=True, blank=True, db_column='CUSTCODE')
+    invoice_number = models.IntegerField(null=True, blank=True, db_column='INVNO')
+    invoice_date = models.DateField(null=True, blank=True, db_column='INVDT')
+    invoice_type = models.CharField(null=True, blank=True, max_length=1, db_column='INVTYPE')
+    net_amount = models.FloatField(db_column='NETAMT', null=True, blank=True)
+    paid_amount = models.FloatField(db_column='PAIDAMT', null=True, blank=True)
+    received_amount = models.FloatField(null=True, blank=True, db_column='RECDAMT')
+    balance_amount = models.FloatField(db_column='BALAMT', null=True, blank=True)
+    customer_name = models.CharField(max_length=50, null=True, blank=True, db_column='CUSTNAME')
+    customer_city = models.CharField(max_length=35, db_column='CUSTCITY', null=True, blank=True)
+    rmasid = models.IntegerField(null=False, blank=True, db_column='MASID', default=0)
+    delay_days = models.IntegerField(db_column='DELAY', null=True, blank=True)
+    depot = models.IntegerField(db_column='DEPOT', null=True, blank=True)
+    other_charges = models.FloatField(db_column='OTHER_CHGS', null=True, blank=True)
+
+    def __str__(self):
+        return "{} - {} - {}".format(self.invoice_number, self.balance_amount, self.depot)
+
+
+    class Meta:
+        verbose_name_plural = "National Payment View"
+        db_table = "NATIONAL_PAYMENT_PENDING"
+
+    def to_json(self):
+        return {
+            'id': str(self.id),
+            'invoice_number': str(self.invoice_number or ""),
+            'invoice_date': str(self.invoice_date or ""),
+            'adjusted_amount': self.adjusted_amount or 0,
+            'adjust_type': self.adjust_type or "",
+            'invoice_type': str(self.invoice_type or ""),
+            'net_amount': str(self.net_amount or 0),
+            'paid_amount': str(self.paid_amount or 0),
+            'received_amount': str(self.received_amount or ""),
+            'balance_amount': str(self.balance_amount or ""),
+            'customer_name': self.customer_name,
+            'customer_city': self.customer_city or "",
+            'rmasid': str(self.rmasid or ""),
+            'delay_days': str(self.credit_days or ""),
+            'depot': str(self.depot or ""),
+            "other_charges": str(self.other_charges or 0)
+        }
 
 

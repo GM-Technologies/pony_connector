@@ -573,9 +573,10 @@ def payment_adjustment_sync():
         paymentadj_data = [each.to_json() for each in paymentadjs]
         try:
             request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
-            sync_paymentadj = requests.post(url=sfa_urls.DIVISION_SYNC,
+            sync_paymentadj = requests.post(url=sfa_urls.PAYMENT_ADJ_SYNC,
                                           data={'paymentadjs': json.dumps(paymentadj_data)},
                                           headers=request_headers)
+            #print json.dumps(paymentadj_data)
             if not sync_paymentadj.status_code == 200:
                 raise Exception('{} response from SFA'.format(sync_paymentadj.status_code))
             response = json.loads(sync_paymentadj.content)
@@ -583,6 +584,8 @@ def payment_adjustment_sync():
                 if not each:
                     continue
                 try:
+                    print each['id']
+                    print each['is_sync']
                     paymentadj = PaymentAdjustmentDetails.objects.get(pk=each['id'])
                     paymentadj.is_sync = each['is_sync']
                     paymentadj.save(update_fields=['is_sync'])
