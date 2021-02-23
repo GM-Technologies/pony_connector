@@ -526,7 +526,8 @@ class InvoiceHeader(base_models.AuditModel):
     total_sgst_amount = models.FloatField(db_column='TOT_SGSTAMT')
     total_igst_amount = models.FloatField(db_column='TOT_IGSTAMT')
     invoice_gstin = models.CharField(max_length=15, db_column='INV_GSTIN', null=True, blank=True)
-    close_flag = models.IntegerField(blank=True, db_column='CFLAG', default=0)
+    close_flag = models.IntegerField(blank=True, db_column='CLOSEFLAG', default=0)
+    bouns_flag = models.IntegerField(null=True, blank=True, db_column='BOUNSFLAG', default=0)
 
     def __str__(self):
         return "{}".format(self.invoice_number)
@@ -569,8 +570,9 @@ class InvoiceHeader(base_models.AuditModel):
             "total_sgst_amount": str(self.total_sgst_amount or 0),
             "total_igst_amount": str(self.total_igst_amount or 0),
             "invoice_gstin": self.invoice_gstin or "",
-            'close_flag': self.close_flag,
+            "close_flag": self.close_flag,
             "invoice_details": [each.to_json() for each in self.invoicedetails_set.all()],
+            "bouns_flag": self.bouns_flag,
             "is_sync": self.is_sync
         }
 
@@ -847,6 +849,7 @@ class NationalPaymentPendingView(models.Model):
 
 
     class Meta:
+        managed = False
         verbose_name_plural = "National Payment View"
         db_table = "NATIONAL_PAYMENT_PENDING"
 
