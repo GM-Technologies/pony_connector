@@ -528,6 +528,8 @@ class InvoiceHeader(base_models.AuditModel):
     invoice_gstin = models.CharField(max_length=15, db_column='INV_GSTIN', null=True, blank=True)
     close_flag = models.IntegerField(blank=True, db_column='CLOSEFLAG', default=0)
     bouns_flag = models.IntegerField(null=True, blank=True, db_column='BOUNSFLAG', default=0)
+    grn_flag = models.IntegerField(null=True, blank=True, db_column='GRNFLAG', default=0)
+    tot_grnvalue = models.IntegerField(null=True, blank=True, db_column='TOT_GRNVALUE', default=0)
 
     def __str__(self):
         return "{}".format(self.invoice_number)
@@ -839,7 +841,7 @@ class NationalPaymentPendingView(models.Model):
     balance_amount = models.FloatField(db_column='BALAMT', null=True, blank=True)
     customer_name = models.CharField(max_length=50, null=True, blank=True, db_column='CUSTNAME')
     customer_city = models.CharField(max_length=35, db_column='CUSTCITY', null=True, blank=True)
-    rmasid = models.IntegerField(null=False, blank=True, db_column='MASID', default=0)
+    rmasid = models.IntegerField(null=True, blank=True, db_column='MASID', default=0)
     delay_days = models.IntegerField(db_column='DELAY', null=True, blank=True)
     depot = models.IntegerField(db_column='DEPOT', null=True, blank=True)
     other_charges = models.FloatField(db_column='OTHER_CHGS', null=True, blank=True)
@@ -870,7 +872,60 @@ class NationalPaymentPendingView(models.Model):
             'rmasid': str(self.rmasid or ""),
             'delay_days': str(self.credit_days or ""),
             'depot': str(self.depot or ""),
-            "other_charges": str(self.other_charges or 0)
+            'other_charges': str(self.other_charges or 0)
         }
 
 
+class ChequeDishonorDetails(base_models.AuditModel):
+    id = models.AutoField(primary_key=True, db_column='ID')
+    depo_code = models.ForeignKey(DepoMaster, db_column='DEPOCODE')
+    bounce_date = models.DateField(db_column='BOUNDT', null=True, blank=True)
+    cheque_no = models.CharField(null=True, blank=True, max_length=15, db_column='CHQNO')
+    cheque_date = models.DateField(db_column='CHQDATE', null=True, blank=True)
+    customer_code = models.IntegerField(db_column='CUSTCODE', null=True, blank=True)
+    cheque_amount = models.IntegerField(null=True, blank=True, db_column='CHQAMT')
+    bank_name = models.CharField(null=True, blank=True, max_length=50, db_column='BANKNAME')
+    created_user = models.CharField(null=True, blank=True, max_length=10, db_column='CRETUSER')
+    creation_date = models.DateField(db_column='CRETDATE', null=True, blank=True)
+    modified_user = models.CharField(null=True, blank=True, max_length=10, db_column='MODIUSER')
+    modi_date = models.DateField(db_column='MODIDATE', null=True, blank=True)
+    remarks = models.CharField(null=True, blank=True, max_length=55, db_column='REMRKS')
+    rmasid = models.IntegerField(null=False, blank=True, db_column='RMASID', default=0)
+    bounsid = models.IntegerField(null=False, blank=True, db_column='BOUNSID', default=0)
+    receipt_number = models.IntegerField(null=False, blank=True, db_column='RECPTNO', default=0)
+    recept_date = models.DateField(db_column='RECPTDT', null=True, blank=True)
+    other_charges = models.FloatField(db_column='OTHER_CHGS', null=True, blank=True)
+    c_flag = models.IntegerField(null=True, blank=True, db_column='CFLAG')
+    recept_id = models.ForeignKey(CollectionHeader, null=True, blank=True, db_column='COLHDRID')
+
+    def __str__(self):
+        return "{} - {}".format(self.cheque_no, self.cheque_amount)
+
+    class Meta:
+        verbose_name_plural = "CHEQUE DETAILS"
+        db_table = "GCP_FT107_DIS_CHQ"
+
+    def to_json(self):
+        return {
+            'id': str(self.id),
+            'depo_code': str(self.depo_code.depo_code),
+            'bounce_date': str(self.bounce_date or ""),
+            'cheque_no': self.cheque_no or "",
+            'cheque_date': str(self.cheque_date or ""),
+            'customer_code': str(self.customer_code or ""),
+            'cheque_amount': str(self.cheque_amount or ""),
+            'bank_name': self.bank_name or "",
+            'created_user': self.created_user or "",
+            'creation_date': str(self.creation_date or ""),
+            'modified_user': self.modified_user or "",
+            'modi_date': str(self.modi_date or ""),
+            'remarks': self.remarks or "",
+            'rmasid': str(self.rmasid or ""),
+            'bounsid': str(self.bounsid or ""),
+            'receipt_number': str(self.receipt_number or ""),
+            'recept_date': str(self.recept_date or ""),
+            'other_charges': str(self.other_charges or 0),
+            'c_flag': str(self.c_flag or ""),
+            'recept_no': str(self.recept_id.receipt_number if self.recept_id else ""),
+            'is_sync': self.is_sync
+        }
