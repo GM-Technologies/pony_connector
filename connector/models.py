@@ -530,6 +530,7 @@ class InvoiceHeader(base_models.AuditModel):
     bouns_flag = models.IntegerField(null=True, blank=True, db_column='BOUNSFLAG', default=0)
     grn_flag = models.IntegerField(null=True, blank=True, db_column='GRNFLAG', default=0)
     tot_grnvalue = models.IntegerField(null=True, blank=True, db_column='TOT_GRNVALUE', default=0)
+    masid = models.IntegerField(null=False, blank=True, db_column='MASID', default=0)
 
     def __str__(self):
         return "{}".format(self.invoice_number)
@@ -575,6 +576,7 @@ class InvoiceHeader(base_models.AuditModel):
             "close_flag": self.close_flag,
             "invoice_details": [each.to_json() for each in self.invoicedetails_set.all()],
             "bouns_flag": self.bouns_flag,
+            "masid": str(self.masid or ""),
             "is_sync": self.is_sync
         }
 
