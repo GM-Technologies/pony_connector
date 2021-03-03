@@ -65,7 +65,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='invoiceheader',
             name='paid_amount',
-            field=models.FloatField(db_column='PAIDAMT', default=0),
+            field=models.FloatField(blank=True, db_column='PAIDAMT', default=0, null=True),
         ),
         migrations.AlterField(
             model_name='invoiceheader',

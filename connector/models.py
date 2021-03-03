@@ -518,7 +518,7 @@ class InvoiceHeader(base_models.AuditModel):
     advance_amount = models.FloatField(db_column='ADVAMT', default=0)
     credit_amount = models.FloatField(db_column='CRAMT', default=0)
     dr_amount = models.FloatField(db_column='DRAMT', default=0)
-    paid_amount = models.FloatField(db_column='PAIDAMT', default=0)
+    paid_amount = models.FloatField(db_column='PAIDAMT', null=True, blank=True, default=0)
     invoice_amount = models.FloatField(db_column='INVAMT', default=0)
     other_charges = models.FloatField(db_column='OTHER_CHGS', default=0)
     gross_weight = models.IntegerField(db_column='GROSSWT', null=True, blank=True)

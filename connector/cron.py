@@ -10,7 +10,7 @@ from django.db.models.query_utils import Q
 from connector import sfa_urls
 from connector.models import ProductMaster, DivisionMaster, DepoMaster, CustomerMaster, \
     OrderHeader, OrderDetails, InvoiceHeader, InvoiceDetails, CollectionHeader, DepoSalesRep, StockMaster,\
-    CollectionDetails, PaymentAdjustmentDetails
+    CollectionDetails, PaymentAdjustmentDetails, ChequeDishonorDetails
 from connector.utils import get_paginated_objects
 
 
@@ -589,6 +589,43 @@ def payment_adjustment_sync():
                     paymentadj = PaymentAdjustmentDetails.objects.get(pk=each['id'])
                     paymentadj.is_sync = each['is_sync']
                     paymentadj.save(update_fields=['is_sync'])
+                except BaseException as ex:
+                    print ex
+        except BaseException as ex:
+            print ex
+        if pagination_info['has_next']():
+            page = pagination_info['next_page_number']()
+        else:
+            synced = True
+
+
+
+def cheque_dishonour_sync():
+    unsynced_cheque_dishonour = list(ChequeDishonorDetails.objects.filter(is_sync=False))
+    synced = False
+    page = 1
+    per_page = 50
+    while not synced and len(unsynced_cheque_dishonour):
+        cheque_dishonoured, pagination_info = get_paginated_objects(unsynced_cheque_dishonour, page, per_page)
+        cheque_dishonour_data = [each.to_json() for each in cheque_dishonoured]
+        try:
+            request_headers = {'Authorization': 'Token {}'.format(settings.SFA_TOKEN)}
+            sync_cheque_dishonour = requests.post(url=sfa_urls.CHEQUE_DISHONOUR_SYNC,
+                                          data={'allchequedishonored': json.dumps(cheque_dishonour_data)},
+                                          headers=request_headers)
+            #print json.dumps(cheque_dishonour_data)
+            if not sync_cheque_dishonour.status_code == 200:
+                raise Exception('{} response from SFA'.format(sync_cheque_dishonour.status_code))
+            response = json.loads(sync_cheque_dishonour.content)
+            for each in response:
+                if not each:
+                    continue
+                try:
+                    print each['id']
+                    print each['is_sync']
+                    cheque_dishonour = ChequeDishonorDetails.objects.get(pk=each['id'])
+                    cheque_dishonour.is_sync = each['is_sync']
+                    cheque_dishonour.save(update_fields=['is_sync'])
                 except BaseException as ex:
                     print ex
         except BaseException as ex:
