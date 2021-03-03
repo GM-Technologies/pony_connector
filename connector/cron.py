@@ -599,7 +599,6 @@ def payment_adjustment_sync():
             synced = True
 
 
-
 def cheque_dishonour_sync():
     unsynced_cheque_dishonour = list(ChequeDishonorDetails.objects.filter(is_sync=False))
     synced = False
@@ -613,7 +612,6 @@ def cheque_dishonour_sync():
             sync_cheque_dishonour = requests.post(url=sfa_urls.CHEQUE_DISHONOUR_SYNC,
                                           data={'allchequedishonored': json.dumps(cheque_dishonour_data)},
                                           headers=request_headers)
-            #print json.dumps(cheque_dishonour_data)
             if not sync_cheque_dishonour.status_code == 200:
                 raise Exception('{} response from SFA'.format(sync_cheque_dishonour.status_code))
             response = json.loads(sync_cheque_dishonour.content)
@@ -621,8 +619,6 @@ def cheque_dishonour_sync():
                 if not each:
                     continue
                 try:
-                    print each['id']
-                    print each['is_sync']
                     cheque_dishonour = ChequeDishonorDetails.objects.get(pk=each['id'])
                     cheque_dishonour.is_sync = each['is_sync']
                     cheque_dishonour.save(update_fields=['is_sync'])

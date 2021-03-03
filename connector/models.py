@@ -576,7 +576,9 @@ class InvoiceHeader(base_models.AuditModel):
             "close_flag": self.close_flag,
             "invoice_details": [each.to_json() for each in self.invoicedetails_set.all()],
             "bouns_flag": self.bouns_flag,
-            "masid": str(self.masid or ""),
+            "grn_flag": self.grn_flag or 0,
+            "tot_grnvalue": self.tot_grnvalue or 0,
+            "masid": self.masid or 0,
             "is_sync": self.is_sync
         }
 
@@ -927,7 +929,7 @@ class ChequeDishonorDetails(base_models.AuditModel):
             'receipt_number': str(self.receipt_number or ""),
             'recept_date': str(self.recept_date or ""),
             'other_charges': str(self.other_charges or 0),
-            'c_flag': str(self.c_flag or ""),
+            'c_flag': self.c_flag or 0,
             'recept_no': str(self.recept_id.receipt_number if self.recept_id else ""),
             'is_sync': self.is_sync
         }
